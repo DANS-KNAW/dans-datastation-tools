@@ -21,7 +21,7 @@ provenance_element = 'provenance ' \
                      'xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/" ' \
                      'xmlns:abr="http://www.den.nl/standaard/166/Archeologisch-Basisregister/" ' \
                      'xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/"'
-
+output_list = []
 
 def validate(xml_path: str, xsd_path: str) -> bool:
     xmlschema_doc = etree.parse(xsd_path)
@@ -59,29 +59,40 @@ def replace_provenance_tag(infile):
             f.writelines(line)
 
 
-def write_output(doi: str, storage_identifier: str, old_checksum: str, new_checksum: str, updated: bool,
-                 dvobject_id: str, status: str):
-    print("{}, {}, {}, {}, {}, {}, {}", doi, storage_identifier, old_checksum, new_checksum, updated,
-          dvobject_id, status)
+def add_result(doi: str, storage_identifier: str, old_checksum: str, dvobject_id: str, status: str,
+               new_checksum: str = None):
+    if not new_checksum:
+        new_checksum = old_checksum
+    output_list.append({
+        "doi": doi,
+        "storage_identifier": storage_identifier,
+        "old_checksum": old_checksum,
+        "new_checksum": new_checksum,
+        "updated":  old_checksum is not new_checksum,
+        "dvobject_id": dvobject_id,
+        "status": status
+    })
+    print("{}, {}, {}, {}, {}, {}".format(doi, storage_identifier, old_checksum, new_checksum,
+          dvobject_id, status))
 
 
-def process_dataset(file_storage_root, doi, storage_identifier, current_checksum, dvobject_id):
+def process_dataset(file_storage_root, doi, storage_identifier, current_checksum, dvobject_id: str, output_file):
     logging.debug("({}, {}, {}, {})".format(doi, storage_identifier, current_checksum, dvobject_id))
     provenance_path = os.path.join(file_storage_root, doi, storage_identifier)
     if os.path.exists(provenance_path):
         provenance_file = open(provenance_path)
         if is_xml_file(provenance_file):
             if validate(provenance_path, file_storage_root+'/provenance.xsd'):
-                write_output(doi=doi, storage_identifier=storage_identifier, old_checksum=current_checksum,
-                             new_checksum=current_checksum, updated=False, dvobject_id=dvobject_id, status="OK")
+                add_result(doi=doi, storage_identifier=storage_identifier, old_checksum=current_checksum,
+                           dvobject_id=dvobject_id, status="OK")
                 return
-            # copy provenance_path to <storageIdentifier>.new-provenance
             new_provenance_file = provenance_path+".new-provenance"
             shutil.copyfile(provenance_path, new_provenance_file)
             replace_provenance_tag(new_provenance_file)
             if not validate(new_provenance_file, file_storage_root + '/provenance.xsd'):
-                write_output(doi=doi, storage_identifier=storage_identifier, old_checksum=current_checksum,
-                             new_checksum=current_checksum, updated=False, dvobject_id=dvobject_id, status="FAILED")
+                add_result(doi=doi, storage_identifier=storage_identifier, old_checksum=current_checksum,
+                           dvobject_id=dvobject_id, status="FAILED")
+                write_output(output_file)
                 exit(-1)
             with open(new_provenance_file, 'rb') as f:
                 new_checksum = hashlib.sha1()
@@ -96,17 +107,24 @@ def process_dataset(file_storage_root, doi, storage_identifier, current_checksum
             shutil.copyfile(provenance_path, old_provenance_file)
             shutil.move(new_provenance_file, provenance_path)
             # TODO: update dvndb
-            logging.info("update datafile set checksumvalue = '{}' where id = {} and checksumvalue='{}'", new_checksum,
-                         dvobject_id, current_checksum)
-            # TODO: physical file validation of dataset
-            write_output(doi=doi, storage_identifier=storage_identifier, old_checksum=current_checksum,
-                         new_checksum=new_checksum.hexdigest(), updated=True, dvobject_id=dvobject_id, status="OK")
+            logging.info("update datafile set checksumvalue = \'{}\' where id = {} and checksumvalue=\'{}\'".format(
+                         new_checksum.hexdigest(), dvobject_id, current_checksum))
+            # TODO: physical file validation of dataset, call to dataverse api
+            add_result(doi=doi, storage_identifier=storage_identifier, old_checksum=current_checksum,
+                       new_checksum=new_checksum.hexdigest(), dvobject_id=dvobject_id, status="OK")
 
 
 def is_xml_file(provenance_file):
     # don't parse the file as xml, just check the first line
     return provenance_file.readline().rstrip() == '<?xml version="1.0" encoding="UTF-8"?>'
 
+
+def write_output(file: str):
+    logging.debug("writing to " + file)
+    with open(file, "w") as output_csv:
+        csv_writer = csv.DictWriter(output_csv, output_list[0].keys())
+        csv_writer.writeheader()
+        csv_writer.writerows(output_list)
 
 def main():
     config = init()
@@ -121,19 +139,23 @@ def main():
                         help='the expected current checksum of the provenance.xml file')
     parser.add_argument('-o', '--dvobject-id', dest='dvobject_id',
                         help='the dvobject.id for the provenance.xml in dvndb')
+    parser.add_argument('-l', '--log', dest='output_csv', help='the csv log file with the result per doi',
+                        default='fix-provenance-output.csv')
     args = parser.parse_args()
 
     if not (args.doi and args.storage_identifier):
         linecount = 0
         for line in fileinput.input():
-            print(line.rstrip())
-            row = line.split(",")
+            row = line.rstrip().split(",")
             if linecount > 0:
-                process_dataset(config['dataverse']['files_root'], row[0], row[1], row[2], row[3])
+                process_dataset(config['dataverse']['files_root'], row[0], row[1], row[2], row[3], args.output_csv)
             linecount += 1
     else:
         process_dataset(config['dataverse']['files_root'], args.doi, args.storage_identifier,
-                        args.current_sha1_checksum, args.dvobject_id)
+                        args.current_sha1_checksum, args.dvobject_id, args.output_csv)
+    write_output(args.output_csv)
+
+
 
 
 if __name__ == '__main__':
