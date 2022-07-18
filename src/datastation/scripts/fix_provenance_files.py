@@ -1,5 +1,4 @@
 import argparse
-import sys
 import logging
 import os.path
 from datastation.config import init
@@ -9,6 +8,8 @@ import re
 import hashlib
 import csv
 import fileinput
+import psycopg2
+import requests
 
 provenance_element = 'provenance ' \
                      'xmlns:prov="http://easy.dans.knaw.nl/schemas/bag/metadata/prov/" ' \
@@ -74,7 +75,24 @@ def add_result(doi: str, storage_identifier: str, old_checksum: str, dvobject_id
     })
 
 
-def process_dataset(file_storage_root, doi, storage_identifier, current_checksum, dvobject_id: str, output_file):
+def dv_file_validation(dv_api_token, dv_server_url, dvobject_id):
+    # curl -H X-Dataverse-key:$API_TOKEN -X POST $SERVER_URL/api/admin/validateDataFileHashValue/{fileId}
+    headers = {'X-Dataverse-key': dv_api_token}
+    dv_resp = requests.post(dv_server_url + '/api/admin/validateDataFileHashValue/' + dvobject_id,
+                            headers=headers)
+    dv_resp.raise_for_status()
+    # {"status":"OK","data":{"message":"Datafile validation complete for 10. The hash value is: 8d3ba34a32eac79232156da4974536f0405689ea"}}
+    # {"status":"ERROR","message":"Datafile validation failed for 10. The saved hash value is: 7143025623d4807a1f61a4a8ce1faf1bdc87a66c while the recalculated hash value for the stored file is: 8d3ba34a32eac79232156da4974536f0405689ea"}
+
+    if dv_resp.json()['status'] is "OK":
+        return True
+    else:
+        print(dv_resp.json()["data"]["message"])
+        return False
+
+
+def process_dataset(file_storage_root, doi, storage_identifier, current_checksum, dvobject_id: str,
+                    dvndb, dv_server_url, dv_api_token, output_file):
     logging.debug("({}, {}, {}, {})".format(doi, storage_identifier, current_checksum, dvobject_id))
     provenance_path = os.path.join(file_storage_root, doi, storage_identifier)
     if os.path.exists(provenance_path):
@@ -104,11 +122,26 @@ def process_dataset(file_storage_root, doi, storage_identifier, current_checksum
             shutil.copyfile(provenance_path, old_provenance_file)
             shutil.move(new_provenance_file, provenance_path)
             # TODO: update dvndb
-            logging.info("update datafile set checksumvalue = \'{}\' where id = {} and checksumvalue=\'{}\'"
-                         .format(new_checksum.hexdigest(), dvobject_id, current_checksum))
+            try:
+                dvndb_cursor = dvndb.cursor()
+                update_statement = "update datafile set checksumvalue = \'{}\' where id = {} and checksumvalue=\'{}\'"\
+                    .format(new_checksum.hexdigest(), dvobject_id, current_checksum)
+                logging.debug(update_statement)
+                dvndb_cursor.execute(update_statement)
+            except(Exception, psycopg2.DatabaseError) as error:
+                print(error)
+                add_result(doi=doi, storage_identifier=storage_identifier, old_checksum=current_checksum,
+                           new_checksum=new_checksum.hexdigest(), dvobject_id=dvobject_id, status="FAILED")
+                return
+
+            status = "FAILED"
             # TODO: physical file validation of dataset, call to dataverse api
+            if dv_file_validation(dv_api_token, dv_server_url, dvobject_id):
+                status = "OK"
+                # TODO: delete .old-provenance file
+
             add_result(doi=doi, storage_identifier=storage_identifier, old_checksum=current_checksum,
-                       new_checksum=new_checksum.hexdigest(), dvobject_id=dvobject_id, status="OK")
+                       new_checksum=new_checksum.hexdigest(), dvobject_id=dvobject_id, status=status)
 
 
 def is_xml_file(provenance_file):
@@ -124,6 +157,14 @@ def write_output(file: str):
         csv_writer.writerows(output_list)
 
 
+def connect_to_database(user: str, password: str):
+    return psycopg2.connect(
+        host="localhost",
+        database="dvndb",
+        user=user,
+        password=password)
+
+
 def main():
     config = init()
 
@@ -137,21 +178,37 @@ def main():
                         help='the expected current checksum of the provenance.xml file')
     parser.add_argument('-o', '--dvobject-id', dest='dvobject_id',
                         help='the dvobject.id for the provenance.xml in dvndb')
+    parser.add_argument('-u', '--user', dest='dvndb_user', help="dvn user with update privileges on 'datafile'",
+                        default="dvn_prov_user")
     parser.add_argument('-l', '--log', dest='output_csv', help='the csv log file with the result per doi',
                         default='fix-provenance-output.csv')
     args = parser.parse_args()
+    dvndb_passwd = input("Enter password for user {}:".format(args.dvndb_user))
 
-    if not (args.doi and args.storage_identifier):
-        line_count = 0
-        for line in fileinput.input():
-            row = line.rstrip().split(",")
-            if line_count > 0:
-                process_dataset(config['dataverse']['files_root'], row[0], row[1], row[2], row[3], args.output_csv)
-            line_count += 1
-    else:
-        process_dataset(config['dataverse']['files_root'], args.doi, args.storage_identifier,
-                        args.current_sha1_checksum, args.dvobject_id, args.output_csv)
-    write_output(args.output_csv)
+    try:
+        conn = connect_to_database(args.dvndb_user, dvndb_passwd)
+
+        if not (args.doi and args.storage_identifier):
+            line_count = 0
+            for line in fileinput.input():
+                row = line.rstrip().split(",")
+                if line_count > 0:
+                    process_dataset(config['dataverse']['files_root'], row[0], row[1], row[2], row[3],
+                                    conn, config['dataverse']['server_url'], config['dataverse']['api_token'],
+                                    args.output_csv)
+                line_count += 1
+        else:
+            process_dataset(config['dataverse']['files_root'], args.doi, args.storage_identifier,
+                            args.current_sha1_checksum, args.dvobject_id, conn, config['dataverse']['server_url'],
+                            config['dataverse']['api_token'],args.output_csv)
+            write_output(args.output_csv)
+            conn.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
 
 
 if __name__ == '__main__':
