@@ -145,7 +145,7 @@ def update_dvndb_record(dry_run_path, provenance_path, dvndb, output_file, doi, 
             add_result(output_file, doi=doi, storage_identifier=storage_identifier, old_checksum=old_checksum,
                        new_checksum=new_checksum, dvobject_id=dvobject_id, status="FAILED")
             rollback_new_provenance_file(provenance_path, dry_run_path)
-            sys.exit("problem updating dvndb record for {} and file {}".format(doi, dvobject_id))
+            sys.exit("FATAL ERROR: problem updating dvndb record for {} and file {}".format(doi, dvobject_id))
 
 
 def delete_old_provenance_file(provenance_path, dry_run_path):
@@ -170,7 +170,7 @@ def process_dataset(file_storage_root, doi, storage_identifier, current_checksum
             if not validate(new_provenance_file, file_storage_root + '/provenance.xsd'):
                 add_result(output_file, doi=doi, storage_identifier=storage_identifier,
                            old_checksum=current_checksum, dvobject_id=dvobject_id, status="FAILED")
-                sys.exit("new provenance file not valid for {} at {}".format(doi, new_provenance_file))
+                sys.exit("FATAL ERROR: new provenance file not valid for {} at {}".format(doi, new_provenance_file))
             new_checksum = calculate_checksum(new_provenance_file, dry_run_file)
 
             replace_old_with_new_provenance_file(provenance_path, new_provenance_file, dry_run_file)
@@ -189,7 +189,7 @@ def process_dataset(file_storage_root, doi, storage_identifier, current_checksum
                            old_checksum=current_checksum,
                            new_checksum=new_checksum, dvobject_id=dvobject_id, status="FAILED")
                 rollback_new_provenance_file(provenance_path, dry_run_file)
-                sys.exit("Dataverse file validation failed for new provenance file with id {} of {}"
+                sys.exit("FATAL ERROR: Dataverse file validation failed for new provenance file with id {} of {}"
                          .format(dvobject_id, doi))
 
 
