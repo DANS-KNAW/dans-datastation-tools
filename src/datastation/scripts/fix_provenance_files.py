@@ -37,7 +37,6 @@ def validate(xml_path: str, xsd_path: str) -> bool:
 
 
 def replace_provenance_tag(infile):
-    logging.debug("in replace_provenance {}".format(infile))
     old_provenance_tag = "<([a-zA-Z0-9_:]*)provenance .*>"
     new_str = '<\\1' + provenance_element + '>'
     replaced = False
@@ -64,12 +63,10 @@ def replace_provenance_tag(infile):
 
 def add_result(output_file, doi: str, storage_identifier: str, old_checksum: str, dvobject_id: str, status: str,
                new_checksum: str = None):
-    logging.debug("writing csv record {}, {}".format(doi, status))
     if not new_checksum:
         new_checksum = old_checksum
     with open(output_file, "a") as output_csv:
         csvwriter = csv.writer(output_csv)
-            # writing the fields
         csvwriter.writerow([doi, storage_identifier, old_checksum, new_checksum, old_checksum is not new_checksum,
                            dvobject_id, status])
         output_csv.flush()
@@ -242,38 +239,40 @@ def main():
                         help='the expected current checksum of the provenance.xml file')
     parser.add_argument('-o', '--dvobject-id', dest='dvobject_id',
                         help='the dvobject.id for the provenance.xml in dvndb')
-    parser.add_argument('-u', '--user', dest='dvndb_user', help="dvn user with update privileges on 'datafile'",
-                        default="dvn_prov_user")
+    parser.add_argument('-u', '--user', dest='dvndb_user', help="dvn user with update privileges on 'datafile'")
+    parser.add_argument('-p', '--password', dest='dvndb_password', help="password for dvn user")
     parser.add_argument('-l', '--log', dest='output_csv', help='the csv log file with the result per doi',
                         default='fix-provenance-output.csv')
-    parser.add_argument('-r', '--dryrun', dest='dryrun', help="only logs the actions, nothing is executed", action='store_true')
+    parser.add_argument('-r', '--dryrun', dest='dryrun', help="only logs the actions, nothing is executed",
+                        action='store_true')
+    parser.add_argument('-i', '--input-file', dest='input_file',
+                        help="csv file with columns: DOI, STORAGE_IDENTIFIER, CURRENT_SHA1_CHECKSUM and DVOBJECT_ID")
     args = parser.parse_args()
 
     try:
         dvndb_conn = None
-        write_csv_header(args.output_csv)
         if args.dryrun:
             dry_run_provenance_file_path = "dry-run-provenance-file.xml"
             logging.info("--- DRY RUN, using {} for the temporary provenance file ---"
                          .format(dry_run_provenance_file_path))
         else:
-            dvndb_passwd = input("Enter password for user {}:".format(args.dvndb_user))
-            dvndb_conn = connect_to_database(args.dvndb_user, dvndb_passwd)
+            if not (args.dvndb_password and args.dvndb_user):
+                sys.exit("please provide dvndb user and password when not in dry-run mode")
+            dvndb_conn = connect_to_database(args.dvndb_user, args.dvndb_passwd)
 
-        if not (args.doi and args.storage_identifier):
+        write_csv_header(args.output_csv)
+        if args.input_file:
             line_count = 0
-            logging.debug("line {}".format(line_count))
-            for line in fileinput.input():
-                logging.debug(line)
-                row = line.rstrip().split(",")
-                if line_count > 0:
-                    logging.debug("into process_dataset")
-                    process_dataset(file_storage_root=config['dataverse']['files_root'],
-                                    doi=row[0], storage_identifier=row[1], current_checksum=row[2], dvobject_id=row[3],
-                                    dvndb=dvndb_conn, dv_server_url=config['dataverse']['server_url'],
-                                    dv_api_token=config['dataverse']['api_token'],
-                                    output_file=args.output_csv, dry_run_file=dry_run_provenance_file_path)
-                line_count += 1
+            with open(args.input_file, "r") as input_file_handler:
+                for line in input_file_handler:
+                    row = line.rstrip().split(",")
+                    if line_count > 0:
+                        process_dataset(file_storage_root=config['dataverse']['files_root'], doi=row[0],
+                                        storage_identifier=row[1], current_checksum=row[2], dvobject_id=row[3],
+                                        dvndb=dvndb_conn, dv_server_url=config['dataverse']['server_url'],
+                                        dv_api_token=config['dataverse']['api_token'],
+                                        output_file=args.output_csv, dry_run_file=dry_run_provenance_file_path)
+                    line_count += 1
         else:
             process_dataset(file_storage_root=config['dataverse']['files_root'], doi=args.doi,
                             storage_identifier=args.storage_identifier,
