@@ -1,6 +1,5 @@
 import argparse
 import csv
-import fileinput
 import hashlib
 import logging
 from lxml import etree
@@ -31,7 +30,6 @@ def validate(xml_path: str, xsd_path: str) -> bool:
         xml_doc = etree.parse(xml_path)
         result = xmlschema.validate(xml_doc)
         return result
-    # TODO: what other exceptions are possible?
     except etree.XMLSyntaxError:
         return False
 
@@ -65,16 +63,14 @@ def add_result(output_file, doi: str, storage_identifier: str, old_checksum: str
                new_checksum: str = None):
     if not new_checksum:
         new_checksum = old_checksum
-    with open(output_file, "a") as output_csv:
-        csvwriter = csv.writer(output_csv)
-        csvwriter.writerow([doi, storage_identifier, old_checksum, new_checksum, old_checksum is not new_checksum,
-                           dvobject_id, status])
-        output_csv.flush()
-        output_csv.close()
+    csvwriter = csv.writer(output_file)
+    csvwriter.writerow([doi, storage_identifier, old_checksum, new_checksum, old_checksum is not new_checksum,
+                        dvobject_id, status])
+    output_file.flush()
 
 
-def dv_file_validation(dv_api_token, dv_server_url, dvobject_id, dry_run_path):
-    if dry_run_path:
+def dv_file_validation(dv_api_token, dv_server_url, dvobject_id, dry_run_temp_file):
+    if dry_run_temp_file:
         logging.info("dry run: no Dataverse file validation for {}".format(dvobject_id))
         return True
 
@@ -90,9 +86,9 @@ def dv_file_validation(dv_api_token, dv_server_url, dvobject_id, dry_run_path):
         return False
 
 
-def calculate_checksum(file, dry_run_path):
-    if dry_run_path:
-        file_to_check = dry_run_path
+def calculate_checksum(file, dry_run_temp_file):
+    if dry_run_temp_file:
+        file_to_check = dry_run_temp_file
     else:
         file_to_check = file
 
@@ -106,116 +102,113 @@ def calculate_checksum(file, dry_run_path):
     return new_checksum.hexdigest()
 
 
-def rollback_new_provenance_file(provenance_path, dry_run_path):
-    if dry_run_path:
-        shutil.rmtree(dry_run_path)
-    else:
+def restore_old_provenance_file(provenance_path, dry_run_temp_file):
+    if not dry_run_temp_file:
         shutil.copyfile(provenance_path + ".old-provenance", provenance_path)
-        delete_old_provenance_file(provenance_path)
+        delete_old_provenance_file(provenance_path, dry_run_temp_file)
 
 
-def make_new_provenance_file(provenance_path, dry_run_path):
-    if dry_run_path:
-        new_provenance_file = dry_run_path
+def make_new_provenance_file(provenance_path, dry_run_temp_file):
+    if dry_run_temp_file:
+        new_provenance_file = dry_run_temp_file
     else:
         new_provenance_file = provenance_path + ".new-provenance"
+    logging.info("fixing {}".format(provenance_path))
     shutil.copyfile(provenance_path, new_provenance_file)
     replace_provenance_tag(new_provenance_file)
     return new_provenance_file
 
 
-def replace_old_with_new_provenance_file(provenance_path, new_provenance_file, dry_run_path):
-    if not dry_run_path:
+def replace_old_with_new_provenance_file(provenance_path, new_provenance_file, dry_run_temp_file):
+    if not dry_run_temp_file:
         old_provenance_file = provenance_path + ".old-provenance"
         shutil.copyfile(provenance_path, old_provenance_file)
         shutil.move(new_provenance_file, provenance_path)
 
 
-def update_dvndb_record(dry_run_path, provenance_path, dvndb, output_file, doi, storage_identifier, old_checksum,
+def update_dvndb_record(dry_run_temp_file, provenance_path, dvndb, output_file, doi, storage_identifier, old_checksum,
                         new_checksum, dvobject_id):
     update_statement = "update datafile set checksumvalue = '{}' where id = {} and checksumvalue='{}'"\
         .format(new_checksum, dvobject_id, old_checksum)
-    logging.debug(update_statement)
-    if not dry_run_path:
+    logging.info(update_statement)
+    if not dry_run_temp_file:
         try:
             dvndb_cursor = dvndb.cursor()
             dvndb_cursor.execute(update_statement)
-        except(Exception, psycopg2.DatabaseError) as error:
+        except psycopg2.DatabaseError as error:
             logging.error(error)
             add_result(output_file, doi=doi, storage_identifier=storage_identifier, old_checksum=old_checksum,
                        new_checksum=new_checksum, dvobject_id=dvobject_id, status="FAILED")
-            rollback_new_provenance_file(provenance_path, dry_run_path)
+            restore_old_provenance_file(provenance_path, dry_run_temp_file)
             sys.exit("FATAL ERROR: problem updating dvndb record for {} and file {}".format(doi, dvobject_id))
 
 
-def delete_old_provenance_file(provenance_path, dry_run_path):
-    if not dry_run_path:
-        shutil.rmtree(provenance_path + ".old-provenance")
+def delete_old_provenance_file(provenance_path, dry_run_temp_file):
+    if not dry_run_temp_file:
+        os.remove(provenance_path + ".old-provenance")
 
 
 def process_dataset(file_storage_root, doi, storage_identifier, current_checksum, dvobject_id: str,
                     dvndb, dv_server_url, dv_api_token, output_file, dry_run_file):
-    logging.debug("({}, {}, {}, {})".format(doi, storage_identifier, current_checksum, dvobject_id))
+    logging.info("processing {} with file {}".format(doi, storage_identifier))
     provenance_path = os.path.join(file_storage_root, doi, storage_identifier)
-    if os.path.exists(provenance_path):
-        provenance_file = open(provenance_path)
-        if is_provenance_xml_file(provenance_file):
-            if validate(provenance_path, file_storage_root + '/provenance.xsd'):
-                add_result(output_file, doi=doi, storage_identifier=storage_identifier,
-                           old_checksum=current_checksum, dvobject_id=dvobject_id, status="OK")
-                return
+    if not os.path.exists(provenance_path):
+        sys.exit("FATAL ERROR: {} does not exist for doi {}".format(provenance_path, doi))
 
-            new_provenance_file = make_new_provenance_file(provenance_path, dry_run_file)
+    with open(provenance_path) as provenance_file:
+        if not is_provenance_xml_file(provenance_file):
+            sys.exit("FATAL ERROR: {} for doi {} is not a provenance xml file".format(provenance_file, doi))
 
-            if not validate(new_provenance_file, file_storage_root + '/provenance.xsd'):
-                add_result(output_file, doi=doi, storage_identifier=storage_identifier,
-                           old_checksum=current_checksum, dvobject_id=dvobject_id, status="FAILED")
-                sys.exit("FATAL ERROR: new provenance file not valid for {} at {}".format(doi, new_provenance_file))
-            new_checksum = calculate_checksum(new_provenance_file, dry_run_file)
+        if validate(provenance_path, file_storage_root + '/provenance.xsd'):
+            logging.info("{} is already valid for doi {}".format(storage_identifier, doi))
+            add_result(output_file, doi=doi, storage_identifier=storage_identifier,
+                       old_checksum=current_checksum, dvobject_id=dvobject_id, status="OK")
+            return
 
-            replace_old_with_new_provenance_file(provenance_path, new_provenance_file, dry_run_file)
+        new_provenance_file = make_new_provenance_file(provenance_path, dry_run_file)
 
+        if not validate(new_provenance_file, file_storage_root + '/provenance.xsd'):
+            add_result(output_file, doi=doi, storage_identifier=storage_identifier,
+                       old_checksum=current_checksum, dvobject_id=dvobject_id, status="FAILED")
+            sys.exit("FATAL ERROR: new provenance file not valid for {} at {}".format(doi, new_provenance_file))
+
+        new_checksum = calculate_checksum(new_provenance_file, dry_run_file)
+        replace_old_with_new_provenance_file(provenance_path, new_provenance_file, dry_run_file)
+        update_dvndb_record(dry_run_file, provenance_path, dvndb, output_file, doi=doi,
+                            storage_identifier=storage_identifier, old_checksum=current_checksum,
+                            new_checksum=new_checksum, dvobject_id=dvobject_id)
+
+        if dv_file_validation(dv_api_token, dv_server_url, dvobject_id, dry_run_file):
+            logging.info("Successfully fixed {}".format(doi))
+            delete_old_provenance_file(provenance_path, dry_run_file)
+            add_result(output_file, doi=doi, storage_identifier=storage_identifier,
+                       old_checksum=current_checksum,
+                       new_checksum=new_checksum, dvobject_id=dvobject_id, status="OK")
+        else:
+            add_result(output_file, doi=doi, storage_identifier=storage_identifier,
+                       old_checksum=current_checksum,
+                       new_checksum=new_checksum, dvobject_id=dvobject_id, status="FAILED")
+            # rollback the database update, resetting the original checksum
             update_dvndb_record(dry_run_file, provenance_path, dvndb, output_file, doi=doi,
-                                storage_identifier=storage_identifier, old_checksum=current_checksum,
-                                new_checksum=new_checksum, dvobject_id=dvobject_id)
-
-            if dv_file_validation(dv_api_token, dv_server_url, dvobject_id, dry_run_file):
-                delete_old_provenance_file(provenance_path, dry_run_file)
-                add_result(output_file, doi=doi, storage_identifier=storage_identifier,
-                           old_checksum=current_checksum,
-                           new_checksum=new_checksum, dvobject_id=dvobject_id, status="OK")
-            else:
-                add_result(output_file, doi=doi, storage_identifier=storage_identifier,
-                           old_checksum=current_checksum,
-                           new_checksum=new_checksum, dvobject_id=dvobject_id, status="FAILED")
-                rollback_new_provenance_file(provenance_path, dry_run_file)
-                sys.exit("FATAL ERROR: Dataverse file validation failed for new provenance file with id {} of {}"
-                         .format(dvobject_id, doi))
+                                storage_identifier=storage_identifier, old_checksum=new_checksum,
+                                new_checksum=current_checksum, dvobject_id=dvobject_id)
+            restore_old_provenance_file(provenance_path, dry_run_file)
+            sys.exit("FATAL ERROR: Dataverse file validation failed for new provenance file with id {} of {}"
+                     .format(dvobject_id, doi))
 
 
 def is_provenance_xml_file(provenance_file):
     # don't parse the file as xml, just check the first line and tag
     xml_prolog_found = provenance_file.readline().rstrip() == '<?xml version="1.0" encoding="UTF-8"?>'
     if xml_prolog_found:
+        line_count = 0
         for line in provenance_file:
             if "<prov:provenance" in line:
                 return True
+            if line_count > 2:
+                return False
+            line_count += 1
     return False
-
-
-def write_csv_header(file: str):
-    logging.debug("writing to " + file)
-    headers = [
-        "doi",
-        "storage_identifier",
-        "old_checksum",
-        "new_checksum",
-        "updated",
-        "dvobject_id",
-        "status"]
-    with open(file, "w") as output_csv:
-        csv_writer = csv.DictWriter(output_csv, headers)
-        csv_writer.writeheader()
 
 
 def connect_to_database(user: str, password: str):
@@ -260,29 +253,34 @@ def main():
                 sys.exit("please provide dvndb user and password when not in dry-run mode")
             dvndb_conn = connect_to_database(args.dvndb_user, args.dvndb_passwd)
 
-        write_csv_header(args.output_csv)
-        if args.input_file:
-            line_count = 0
-            with open(args.input_file, "r") as input_file_handler:
-                for line in input_file_handler:
-                    row = line.rstrip().split(",")
-                    if line_count > 0:
-                        process_dataset(file_storage_root=config['dataverse']['files_root'], doi=row[0],
-                                        storage_identifier=row[1], current_checksum=row[2], dvobject_id=row[3],
-                                        dvndb=dvndb_conn, dv_server_url=config['dataverse']['server_url'],
-                                        dv_api_token=config['dataverse']['api_token'],
-                                        output_file=args.output_csv, dry_run_file=dry_run_provenance_file_path)
-                    line_count += 1
-        else:
-            process_dataset(file_storage_root=config['dataverse']['files_root'], doi=args.doi,
-                            storage_identifier=args.storage_identifier,
-                            current_checksum=args.current_sha1_checksum, dvobject_id=args.dvobject_id, dvndb=dvndb_conn,
-                            dv_server_url=config['dataverse']['server_url'],
-                            dv_api_token=config['dataverse']['api_token'], output_file=args.output_csv,
-                            dry_run_file=dry_run_provenance_file_path)
+        with open(args.output_csv, "w") as output_csv:
+            logging.info("writing to " + args.output_csv)
+            headers = ["doi", "storage_identifier", "old_checksum", "new_checksum", "updated", "dvobject_id", "status"]
+            csv_writer = csv.DictWriter(output_csv, headers)
+            csv_writer.writeheader()
+            if args.input_file:
+                line_count = 0
+                with open(args.input_file, "r") as input_file_handler:
+                    for line in input_file_handler:
+                        row = line.rstrip().split(",")
+                        if line_count > 0:
+                            process_dataset(file_storage_root=config['dataverse']['files_root'], doi=row[0],
+                                            storage_identifier=row[1], current_checksum=row[2], dvobject_id=row[3],
+                                            dvndb=dvndb_conn, dv_server_url=config['dataverse']['server_url'],
+                                            dv_api_token=config['dataverse']['api_token'],
+                                            output_file=output_csv, dry_run_file=dry_run_provenance_file_path)
+                        line_count += 1
+            else:
+                process_dataset(file_storage_root=config['dataverse']['files_root'], doi=args.doi,
+                                storage_identifier=args.storage_identifier,
+                                current_checksum=args.current_sha1_checksum, dvobject_id=args.dvobject_id, dvndb=dvndb_conn,
+                                dv_server_url=config['dataverse']['server_url'],
+                                dv_api_token=config['dataverse']['api_token'], output_file=output_csv,
+                                dry_run_file=dry_run_provenance_file_path)
+        output_csv.close()
         if not args.dryrun:
             dvndb_conn.close()
-    except (Exception, psycopg2.DatabaseError) as error:
+    except psycopg2.DatabaseError as error:
         logging.error(error)
     finally:
         if dvndb_conn is not None:
