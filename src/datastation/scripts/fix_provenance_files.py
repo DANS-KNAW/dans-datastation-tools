@@ -32,7 +32,8 @@ def validate(xml_path: str) -> bool:
         provenance_xmlschema.assertValid(xml_doc)
         return True
     except etree.XMLSyntaxError as e:
-        logging.error(e)
+        # info instead of error because we expect the old-provenance to have syntax errors
+        logging.info(e)
         return False
     except etree.DocumentInvalid as e:
         # info instead of error because we expect the old-provenance to be invalid
@@ -166,7 +167,7 @@ def process_dataset(file_storage_root, doi, storage_identifier, current_checksum
             sys.exit("FATAL ERROR: {} for doi {} is not a provenance xml file".format(provenance_file, doi))
 
         if validate(provenance_path):
-            logging.info("{} is already valid for doi {}".format(storage_identifier, doi))
+            logging.info("SUCCESS: {} is already valid for doi {}".format(storage_identifier, doi))
             add_result(output_file, doi=doi, storage_identifier=storage_identifier,
                        old_checksum=current_checksum, dvobject_id=dvobject_id, status="OK")
             return
@@ -185,7 +186,7 @@ def process_dataset(file_storage_root, doi, storage_identifier, current_checksum
                             new_checksum=new_checksum, dvobject_id=dvobject_id)
 
         if dv_file_validation(dv_api_token, dv_server_url, dvobject_id, dry_run_file):
-            logging.info("Successfully fixed {}".format(doi))
+            logging.info("SUCCESS: {} is fixed for doi {}".format(storage_identifier, doi))
             delete_old_provenance_file(provenance_path, dry_run_file)
             add_result(output_file, doi=doi, storage_identifier=storage_identifier,
                        old_checksum=current_checksum,
@@ -268,9 +269,7 @@ def main():
             if args.input_file:
                 with open(args.input_file, "r") as input_file_handler:
                     csv_reader = csv.DictReader(input_file_handler, delimiter=',')
-                    line_count = 0
                     for row in csv_reader:
-                        if line_count > 0:
                             process_dataset(file_storage_root=config['dataverse']['files_root'], doi=row["doi"],
                                             storage_identifier=row["storage_identifier"],
                                             current_checksum=row["current_sha1_checksum"],
@@ -278,7 +277,6 @@ def main():
                                             dvndb=dvndb_conn, dv_server_url=config['dataverse']['server_url'],
                                             dv_api_token=config['dataverse']['api_token'],
                                             output_file=output_csv, dry_run_file=dry_run_provenance_file_path)
-                        line_count += 1
             else:
                 process_dataset(file_storage_root=config['dataverse']['files_root'], doi=args.doi,
                                 storage_identifier=args.storage_identifier,
