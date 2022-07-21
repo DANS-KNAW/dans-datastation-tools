@@ -22,11 +22,11 @@ provenance_element = 'provenance ' \
                      'xmlns:abr="http://www.den.nl/standaard/166/Archeologisch-Basisregister/" ' \
                      'xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/"'
 
+provenance_schema_doc = etree.parse('http://easy.dans.knaw.nl/schemas/bag/metadata/prov/provenance.xsd')
 
-# TODO read schema only once
-def validate(xml_path: str, xsd_path: str) -> bool:
-    xmlschema_doc = etree.parse(xsd_path)
-    xmlschema = etree.XMLSchema(xmlschema_doc)
+
+def validate(xml_path: str) -> bool:
+    xmlschema = etree.XMLSchema(provenance_schema_doc)
     try:
         xml_doc = etree.parse(xml_path)
         result = xmlschema.validate(xml_doc)
@@ -160,7 +160,7 @@ def process_dataset(file_storage_root, doi, storage_identifier, current_checksum
         if not is_provenance_xml_file(provenance_file):
             sys.exit("FATAL ERROR: {} for doi {} is not a provenance xml file".format(provenance_file, doi))
 
-        if validate(provenance_path, 'http://easy.dans.knaw.nl/schemas/bag/metadata/prov/provenance.xsd'):
+        if validate(provenance_path):
             logging.info("{} is already valid for doi {}".format(storage_identifier, doi))
             add_result(output_file, doi=doi, storage_identifier=storage_identifier,
                        old_checksum=current_checksum, dvobject_id=dvobject_id, status="OK")
@@ -168,7 +168,7 @@ def process_dataset(file_storage_root, doi, storage_identifier, current_checksum
 
         new_provenance_file = make_new_provenance_file(provenance_path, dry_run_file)
 
-        if not validate(new_provenance_file, 'http://easy.dans.knaw.nl/schemas/bag/metadata/prov/provenance.xsd'):
+        if not validate(new_provenance_file):
             add_result(output_file, doi=doi, storage_identifier=storage_identifier,
                        old_checksum=current_checksum, dvobject_id=dvobject_id, status="FAILED")
             sys.exit("FATAL ERROR: new provenance file not valid for {} at {}".format(doi, new_provenance_file))
@@ -225,7 +225,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description='Fixes one or more invalid provenance.xml files. With the optional parameters, it is possible to process one dataset/provenance.xml.'
-                    + ' If none of the optional parameters is provided the standard input is expected to contain a CSV file with the columns: DOI, STORAGE_IDENTIFIER, CURRENT_SHA1_CHECKSUM and DVOBJECT_ID')
+                    + ' If none of the optional parameters is provided the input-file is expected to contain a CSV file with the columns: doi, storage_identifier, current_sha1_checksum and dvobject_id')
     parser.add_argument('-d', '--doi', dest='doi', help='the dataset DOI')
     parser.add_argument('-s', '--storage-identifier', dest='storage_identifier',
                         help='the storage identifier of the provenance.xml file')
@@ -240,11 +240,12 @@ def main():
     parser.add_argument('-r', '--dryrun', dest='dryrun', help="only logs the actions, nothing is executed",
                         action='store_true')
     parser.add_argument('-i', '--input-file', dest='input_file',
-                        help="csv file with columns: DOI, STORAGE_IDENTIFIER, CURRENT_SHA1_CHECKSUM and DVOBJECT_ID")
+                        help="csv file with columns: doi, storage_identifier, current_sha1_checksum and dvobject_id")
     args = parser.parse_args()
 
+    dvndb_conn = None
     try:
-        dvndb_conn = None
+        dry_run_provenance_file_path = None
         if args.dryrun:
             dry_run_provenance_file_path = "dry-run-provenance-file.xml"
             logging.info("--- DRY RUN, using {} for the temporary provenance file ---"
@@ -260,14 +261,15 @@ def main():
             csv_writer = csv.DictWriter(output_csv, headers)
             csv_writer.writeheader()
             if args.input_file:
-                line_count = 0
-                # TODO: use the column headers
                 with open(args.input_file, "r") as input_file_handler:
-                    for line in input_file_handler:
-                        row = line.rstrip().split(",")
+                    csv_reader = csv.DictReader(input_file_handler, delimiter=',')
+                    line_count = 0
+                    for row in csv_reader:
                         if line_count > 0:
-                            process_dataset(file_storage_root=config['dataverse']['files_root'], doi=row[0],
-                                            storage_identifier=row[1], current_checksum=row[2], dvobject_id=row[3],
+                            process_dataset(file_storage_root=config['dataverse']['files_root'], doi=row["doi"],
+                                            storage_identifier=row["storage_identifier"],
+                                            current_checksum=row["current_sha1_checksum"],
+                                            dvobject_id=row["dvobject_id"],
                                             dvndb=dvndb_conn, dv_server_url=config['dataverse']['server_url'],
                                             dv_api_token=config['dataverse']['api_token'],
                                             output_file=output_csv, dry_run_file=dry_run_provenance_file_path)
@@ -275,7 +277,8 @@ def main():
             else:
                 process_dataset(file_storage_root=config['dataverse']['files_root'], doi=args.doi,
                                 storage_identifier=args.storage_identifier,
-                                current_checksum=args.current_sha1_checksum, dvobject_id=args.dvobject_id, dvndb=dvndb_conn,
+                                current_checksum=args.current_sha1_checksum, dvobject_id=args.dvobject_id,
+                                dvndb=dvndb_conn,
                                 dv_server_url=config['dataverse']['server_url'],
                                 dv_api_token=config['dataverse']['api_token'], output_file=output_csv,
                                 dry_run_file=dry_run_provenance_file_path)

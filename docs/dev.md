@@ -14,7 +14,7 @@ git clone
 cd dans-datastation-tools
 python3 -m venv venv
 source venv/bin/activate
-python3 -m pip poetry 
+python3 -m pip install poetry 
 poetry install
 ```
 
