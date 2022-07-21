@@ -23,13 +23,13 @@ provenance_element = 'provenance ' \
                      'xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/"'
 
 provenance_schema_doc = etree.parse('http://easy.dans.knaw.nl/schemas/bag/metadata/prov/provenance.xsd')
+provenance_xmlschema = etree.XMLSchema(provenance_schema_doc)
 
 
 def validate(xml_path: str) -> bool:
-    xmlschema = etree.XMLSchema(provenance_schema_doc)
     try:
         xml_doc = etree.parse(xml_path)
-        xmlschema.assertValid(xml_doc)
+        provenance_xmlschema.assertValid(xml_doc)
         return True
     except etree.XMLSyntaxError as e:
         logging.error(e)
