@@ -29,9 +29,14 @@ def validate(xml_path: str) -> bool:
     xmlschema = etree.XMLSchema(provenance_schema_doc)
     try:
         xml_doc = etree.parse(xml_path)
-        result = xmlschema.validate(xml_doc)
-        return result
-    except etree.XMLSyntaxError:
+        xmlschema.assertValid(xml_doc)
+        return True
+    except etree.XMLSyntaxError as e:
+        logging.error(e)
+        return False
+    except etree.DocumentInvalid as e:
+        # info instead of error because we expect the old-provenance to be invalid
+        logging.info(e)
         return False
 
 
