@@ -64,12 +64,12 @@ def main():
     parser = argparse.ArgumentParser(
         description='Retrieves the metadata for all published datasets with the pids in the given input file and stores'
                     ' it in the metadata_dir. The transformed metadata is then stored in the converted_dir.')
-    parser.add_argument('-i', '--input_file', default='dataset_pids.txt', help='The input file with the dataset pids')
+    parser.add_argument('-i', '--input_file', help='The input file with the dataset pids')
     parser.add_argument('-m', '--metadata_dir',
                         help='The input dir with the dataset metadata files. If the folder is empty or does not exist'
                              'the json files are retrieved from dataverse and stored with file name '
                              'doi_prefix_shoulder_suffix.json')
-    parser.add_argument('-c', '--converted_dir', default='converted_dataset_metadata', required=True,
+    parser.add_argument('-c', '--converted_dir', required=True,
                         help='The output dir, for storing the converted metadata files')
     args = parser.parse_args()
 
