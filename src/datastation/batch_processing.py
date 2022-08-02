@@ -9,7 +9,7 @@ def batch_process(pids, process_action_func, output_file=None, delay=0.1, fail_o
     """
     if output_file is None:
         timestamp_str = '_' + datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = "out-{}.txt".format(timestamp_str)
+        output_file = "out{}.txt".format(timestamp_str)
     with open(output_file, 'w') as mutated_dataset_pids_file:
         num_pids = len(pids)
         logging.info("Start batch processing on {} datasets".format(num_pids))
