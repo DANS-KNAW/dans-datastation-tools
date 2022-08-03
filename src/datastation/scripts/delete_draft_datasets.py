@@ -19,7 +19,7 @@ def main():
                                                  'Only the draft version is deleted '
                                                  'and it will fail if it is not a draft!')
     parser.add_argument('-i', '--input_file', dest='dataset_pids_file', help='The input file with the dataset pids with'
-                                                                             'pattern doi:prefix/shoulder/postfix')
+                                                                             ' pattern doi:prefix/shoulder/postfix')
     args = parser.parse_args()
 
     server_url = config['dataverse']['server_url']
