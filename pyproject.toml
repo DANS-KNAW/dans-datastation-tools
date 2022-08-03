@@ -25,9 +25,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 # TODO: figure out which of the scripts to keep and how to name them in a consistent way
-#convert-dataset-metadatafiles = "datastation.scripts.convert_dataset_metadatafiles:main"
-#delete-role-assignments = "datastation.scripts.delete_role_assignments:main"
-#delete-drafts = "datastation.scripts.delete_datasets:main"
 #oai-harvest = "datastation.scripts.oai_harvest:main"
 #publish-datasets = "datastation.scripts.publish_datasets:main"
 #reindex-datasets = "datastation.scripts.reindex_datasets:main"
@@ -38,3 +35,5 @@ build-backend = "poetry.core.masonry.api"
 update-datacite-records = "datastation.scripts.update_datacite_records:main"
 dv-convert-dataset-metadatafiles="datastation.scripts.convert_dataset_metadatafiles:main"
 dv-delete-draft-datasets="datastation.scripts.delete_draft_datasets:main"
+dv-delete-role-assignment="datastation.scripts.delete_role_assignments:main"
+dv-reindex-datasets="datastation.scripts.reindex_datasets:main"
