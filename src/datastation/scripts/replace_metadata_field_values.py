@@ -1,5 +1,5 @@
 import argparse
-import os
+import logging
 
 from datastation.batch_processing import batch_process
 from datastation.config import init
@@ -12,14 +12,16 @@ def replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, fi
                                         field_to_value):
     """
 
+    :param server_url: configured in yml
+    :param api_token: configured in yml
     :param pid:
-    :param mdb_name:
-    :param field_name:
-    :param field_from_value:
-    :param field_to_value:
+    :param mdb_name: name of the metadata block
+    :param field_name: name of the field to be changed
+    :param field_from_value: old value
+    :param field_to_value: new value
     :return:
     """
-    # Getting the metadata is not always needed when doing a replace,
+    # Getting the metadata is not always needed when doing a replacement,
     # but when you need to determine if replace is needed by inspecting the current content
     # you need to 'get' it first.
     # Another approach would be to do that selection up front (via search)
@@ -40,31 +42,30 @@ def replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, fi
         # expecting (assuming) one and only one instance,
         # but the code will try to change all it can find
         if field['typeName'] == replace_field:
-            print("Found " + replace_field + ": " + field['value'])
+            logging.debug("{}: Found {} with value {} ".format(pid, field['typeName'],  field['value']))
             if field['value'] == replace_from:
                 updated_field = field.copy()
-                # be save and mutate a copy
+                # be safe and mutate a copy
                 updated_field['value'] = replace_to
-                print("Try updating it with: " + updated_field['value'])
+                logging.debug("{}: Try updating it with: " .format(pid, updated_field['value']))
                 replace_dataset_metadatafield(server_url, api_token, pid, updated_field)
-                print("Done")
+                logging.info("{}: Updated {} from {} to {}".format(pid, replace_field, replace_from, replace_to))
                 replaced = True
             else:
                 print("Leave as-is")
+    if not replaced:
+        logging.info("{}: {} not found with value {}, nothing to replace".format(pid, replace_field, replace_from))
     return replaced
 
 
-def replace_metadata_field_value_command(config, server_url, api_token, pids_file, mdb_name, field_name,
+def replace_metadata_field_value_command(server_url, api_token, pids_file, mdb_name, field_name,
                                          field_from_value, field_to_value):
-    # look for inputfile in configured OUTPUT_DIR
-    full_name = os.path.join(config['files']['output_dir'], pids_file)
-    pids = load_pids(full_name)
+    pids = load_pids(pids_file)
 
     batch_process(pids,
                   lambda pid: replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, field_name,
-                                                                  field_from_value,
-                                                                  field_to_value), config['files']['output_dir'],
-                  delay=5.0)
+                                                                  field_from_value,  field_to_value),
+                  output_file=None, delay=5.0)
 
 
 # Note that the datasets that got changed get into a DRAFT status
@@ -74,26 +75,20 @@ def replace_metadata_field_value_command(config, server_url, api_token, pids_fil
 def main():
     config = init()
     parser = argparse.ArgumentParser(
-        description='Replace metadata field in datasets with the pids in the given inputfile')
-    parser.add_argument("metadatablock_name", help="Name of the metadata block")
-    parser.add_argument("field_name", help="Name of the field (json typeName)")
-    parser.add_argument("field_from_value", help="Value to be replaced")
-    parser.add_argument("field_to_value", help="Value replacing (the new value)")
-    parser.add_argument('-p', '--pids_file', default='dataset_pids.txt', help='The input file with the dataset pids')
+        description='Replace metadata field in datasets with the dois in the given input file. See the json metadata '
+                    'export (dataverse_json) to see what names are possible for the fields and metadata blocks')
+    parser.add_argument("-m", "--metadatablock", help="Name of the metadata block", dest="mdb_name")
+    parser.add_argument("-n", "--field_name", help="Name of the field (json typeName)", dest="field_name")
+    parser.add_argument("-f", "--from_value", help="Value to be replaced", dest="field_from_value")
+    parser.add_argument("-t", "--to_value", help="Value replacing (the new value)", dest="field_to_value")
+    parser.add_argument('-i', '--input_file', dest='pids_file', help='The input file with the dataset dois')
     args = parser.parse_args()
 
-    # have a look at the json metadata export (dataverse_json) to see what names are possible
-    mdb_name = 'citation'
-    field_name = 'title'
-    field_from_value = 'test1'
-    field_to_value = 'test1-X'
-
-    # use config for server url and api token
     server_url = config['dataverse']['server_url']
-    api_token = config.DATAVERSE_API_TOKEN
+    api_token = config['dataverse']['api_token']
 
-    replace_metadata_field_value_command(config, server_url, api_token, args.pids_file, mdb_name, field_name,
-                                         field_from_value, field_to_value)
+    replace_metadata_field_value_command(server_url, api_token, args.pids_file, args.mdb_name, args.field_name,
+                                         args.field_from_value, args.field_to_value)
 
 
 if __name__ == '__main__':
