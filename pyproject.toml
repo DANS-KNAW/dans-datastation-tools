@@ -13,11 +13,13 @@ requests = "^2.26.0"
 lxml = "^4.8.0"
 dicttoxml = "^1.7.4"
 pyYAML = "^6.0"
-psycopg="^3.0.15"
+psycopg = "^3.0.16"
+
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 mkdocs = "==1.3.0"
+psycopg_binary = "^3.0.16"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -37,3 +39,4 @@ build-backend = "poetry.core.masonry.api"
 #unlock-datasets = "datastation.scripts.unlock_datasets:main"
 update-datacite-records = "datastation.scripts.update_datacite_records:main"
 dv-fix-provenance-files="datastation.scripts.fix_provenance_files:main"
+dv-import-users="datastation.scripts.import_user:main"
