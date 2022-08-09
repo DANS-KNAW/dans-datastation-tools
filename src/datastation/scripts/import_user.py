@@ -34,8 +34,6 @@ def import_user(dv_server_url, add_builtin_users_key, user, dvndb_conn, dryrun):
                 sys.exit("FATAL ERROR: problem updating dvndb password for user {}".format(user["user_name"]))
 
 
-
-
 def connect_to_database(host: str, db: str, user: str, password: str):
     return psycopg.connect(
         "host={} dbname={} user={} password={}".format(host, db, user, password))
@@ -47,12 +45,14 @@ def main():
     parser = argparse.ArgumentParser(description='Import users into a Dataverse using the BUILTIN_USERS_KEY')
     parser.add_argument('--easy', dest='is_easy_format',
                         help="The csv file is exported from EASY and has the following columns: UID, INITIALS, SURNAME,"
-                             "PREFIX, EMAIL, ORGANISATION, FUNCTION, PASSWORD-HASH",
+                             "PREFIX, EMAIL, ORGANISATION, FUNCTION, PASSWORD-HASH. "
+                             "If not set, the following columns are expected: Username, GivenName, FamilyName, Email, "
+                             "Affiliation, Position, encryptedpassword",
                         action='store_true')
     parser.add_argument('-k', '--builtin_users_key', help="BUILTIN_USERS_KEY set in Dataverse")
-    parser.add_argument('-i', '--input_csv', help="the csv file containing the users and hashed passwords")
     parser.add_argument('-r', '--dryrun', dest='dry_run', help="only logs the actions, nothing is executed",
                         action='store_true')
+    parser.add_argument('-i', '--input_csv', help="the csv file containing the users and hashed passwords")
     args = parser.parse_args()
 
     if (not args.dry_run) and args.builtin_users_key is None:
