@@ -52,7 +52,7 @@ def replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, fi
                 logging.info("{}: Updated {} from {} to {}".format(pid, replace_field, replace_from, replace_to))
                 replaced = True
             else:
-                print("Leave as-is")
+                logging.info("Leave as-is")
     if not replaced:
         logging.info("{}: {} not found with value {}, nothing to replace".format(pid, replace_field, replace_from))
     return replaced
@@ -77,11 +77,11 @@ def main():
     parser = argparse.ArgumentParser(
         description='Replace metadata field in datasets with the dois in the given input file. See the json metadata '
                     'export (dataverse_json) to see what names are possible for the fields and metadata blocks')
-    parser.add_argument("-m", "--metadatablock", help="Name of the metadata block", dest="mdb_name")
-    parser.add_argument("-n", "--field_name", help="Name of the field (json typeName)", dest="field_name")
-    parser.add_argument("-f", "--from_value", help="Value to be replaced", dest="field_from_value")
-    parser.add_argument("-t", "--to_value", help="Value replacing (the new value)", dest="field_to_value")
-    parser.add_argument('-i', '--input_file', dest='pids_file', help='The input file with the dataset dois')
+    parser.add_argument("-m", "--metadata-block", help="Name of the metadata block", dest="mdb_name")
+    parser.add_argument("-n", "--field-name", help="Name of the field (json typeName)", dest="field_name")
+    parser.add_argument("-f", "--from-value", help="Value to be replaced", dest="field_from_value")
+    parser.add_argument("-t", "--to-value", help="Value replacing (the new value)", dest="field_to_value")
+    parser.add_argument('-i', '--input-file', dest='pids_file', help='The input file with the dataset dois')
     args = parser.parse_args()
 
     server_url = config['dataverse']['server_url']

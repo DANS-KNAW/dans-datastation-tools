@@ -22,7 +22,7 @@ def delete_role_assignment_action(server_url, api_token, pid, role_assignee, rol
             logging.info("Deleted role {} for user {} in dataset {}".format(role_alias, role_assignee, pid))
             deleted_role = True
         else:
-            print("Leave as-is")
+            logging.info("Leave as-is")
     if not deleted_role:
         logging.info("role {} not found for user {} in dataset {}".format(role_alias, role_assignee, pid))
     return deleted_role
@@ -41,10 +41,10 @@ def main():
     config = init()
     parser = argparse.ArgumentParser(
         description='Delete role assignment for user in datasets with the pids in the given input file')
-    parser.add_argument("role_assignee", help="Role assignee (example: @dataverseAdmin)", required=True)
-    parser.add_argument("role_alias", help="Role alias (example: contributor)", required=True)
-    parser.add_argument('-i', '--input_file', dest='dataset_pids_file', help='The input file with the dataset dois with'
-                                                                             ' pattern doi:prefix/shoulder/postfix')
+    parser.add_argument("role-assignee", help="Role assignee (example: @dataverseAdmin)", required=True)
+    parser.add_argument("role-alias", help="Role alias (example: contributor)", required=True)
+    parser.add_argument('-i', '--input-file', dest='dataset_pids_file',
+                        help='The input file with the dataset dois with pattern doi:prefix/shoulder/postfix')
     args = parser.parse_args()
 
     role_assignee = args.role_assignee

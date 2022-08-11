@@ -16,7 +16,7 @@ def reindex_dataset_command(config, server_url, pids_file):
 def main():
     config = init()
     parser = argparse.ArgumentParser(description='Reindex datasets with the pids in the given input file')
-    parser.add_argument('-i', '--input_file', dest='pids_file', help='The input file with the dataset dois with '
+    parser.add_argument('-i', '--input-file', dest='pids_file', help='The input file with the dataset dois with '
                                                                      'pattern doi:prefix/shoulder/postfix')
     args = parser.parse_args()
 
