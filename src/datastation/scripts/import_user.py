@@ -10,18 +10,23 @@ from datastation.config import init
 
 
 def import_user(dv_server_url, add_builtin_users_key, user, dvndb_conn, dryrun):
-    logging.info("Add {} with email {}".format(user["user_name"], user["email"]))
+    logging.info("Add user {} with email {}".format(user["userName"], user["email"]))
     dummy_password = "1234AB"
     api_call = "{}/api/builtin-users?password={}&key={}&sendEmailNotification=false".format(
         dv_server_url, dummy_password, add_builtin_users_key)
-    header = {'Content-type': 'application/json'}
     if dryrun:
         logging.info("dry-run, not calling {}".format(api_call))
     else:
-        dv_resp = requests.get(api_call, data=json.dumps(user), headers=header)
-        dv_resp.raise_for_status()
-    update_statement = "UPDATE builtinuser SET encryptedpassword = {} , passwordencryptionversion = 0 " \
-                       "WHERE username = {}".format(user["encrypted_password"], user["user_name"])
+        header = {'Content-type': 'application/json'}
+        dv_resp = requests.post(api_call, data=json.dumps(user), headers=header)
+        response = dv_resp.json()
+        if response["status"] == "ERROR":
+            logging.error("response from dataverse API: {}".format(response["message"]))
+            logging.info("NOT updating password for user {} in database".format(user["userName"]))
+            return
+
+    update_statement = "UPDATE builtinuser SET encryptedpassword = '{}' , passwordencryptionversion = 0 " \
+                       "WHERE username = '{}'".format(user["encrypted_password"], user["userName"])
     if dryrun:
         logging.info("dry-run, not updating database with {}".format(update_statement))
     else:
@@ -31,7 +36,7 @@ def import_user(dv_server_url, add_builtin_users_key, user, dvndb_conn, dryrun):
                 dvndb_conn.commit()
             except psycopg.DatabaseError as error:
                 logging.error(error)
-                sys.exit("FATAL ERROR: problem updating dvndb password for user {}".format(user["user_name"]))
+                sys.exit("FATAL ERROR: problem updating dvndb password for user {}".format(user["userName"]))
 
 
 def connect_to_database(host: str, db: str, user: str, password: str):
@@ -70,12 +75,12 @@ def main():
             for row in csv_reader:
                 if args.is_easy_format:
                     last_name = (row["PREFIX"], row["SURNAME"])
-                    user = {"user_name": row["UID"], "given_name": row["INITIALS"], "family_name": " ".join(last_name),
+                    user = {"userName": row["UID"], "firstName": row["INITIALS"], "lastName": " ".join(last_name),
                             "email": row["EMAIL"], "affiliation": row["ORGANISATION"], "position": row["FUNCTION"],
                             "encrypted_password": row["PASSWORD-HASH"]}
                 else:
-                    user = {"user_name": row["Username"], "given_name": row["GivenName"],
-                            "family_name": row["FamilyName"], "email": row["Email"], "affiliation": row["Affiliation"],
+                    user = {"userName": row["Username"], "firstName": row["GivenName"],
+                            "lastName": row["FamilyName"], "email": row["Email"], "affiliation": row["Affiliation"],
                             "position": row["Position"], "encrypted_password": row["encryptedpassword"]}
 
                 import_user(config['dataverse']['server_url'], args.builtin_users_key, user, dvndb_conn, args.dry_run)
