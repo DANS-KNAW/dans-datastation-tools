@@ -9,7 +9,7 @@ def batch_process(pids, process_action_func, output_file=None, delay=0.1, fail_o
     """
     if output_file is None:
         timestamp_str = '_' + datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = "out{}.txt".format(timestamp_str)
+        output_file = "out-{}.txt".format(timestamp_str)
     with open(output_file, 'w') as mutated_dataset_pids_file:
         num_pids = len(pids)
         logging.info("Start batch processing on {} datasets".format(num_pids))
@@ -23,7 +23,7 @@ def batch_process(pids, process_action_func, output_file=None, delay=0.1, fail_o
                     mutated_dataset_pids_file.write(pid + '\n')
                     mutated_dataset_pids_file.flush()
             except Exception as e:
-                logging.exception("Exception ocurred", exc_info=True)
+                logging.exception("Exception occurred", exc_info=True)
                 if fail_on_first_error:
                     logging.error("Stop processing because of an exception:  {}".format(e))
                     break
