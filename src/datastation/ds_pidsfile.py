@@ -1,4 +1,5 @@
 import os
+import logging
 from datetime import datetime
 
 
@@ -9,7 +10,7 @@ def store_pids(pids, save_path, filename=None):
         timestamp_str = '_' + datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = 'pids' + timestamp_str + '.txt'
     full_name = os.path.join(save_path, filename)
-    print('Storing: ' + full_name)
+    logging.info('Storing: ' + full_name)
     with open(full_name, "w") as outfile:
         outfile.write("\n".join(pids))
 
