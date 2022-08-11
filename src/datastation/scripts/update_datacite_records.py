@@ -1,6 +1,6 @@
 import argparse
-
-import requests, logging
+import requests
+import logging
 
 from datastation.batch_processing import batch_process
 from datastation.config import init
@@ -39,10 +39,9 @@ def main():
     parser = argparse.ArgumentParser(
         description='Calls the Dataverse modifyRegistrationMetadata for the PIDs in the input file, with a delay'
                     + 'between calls')
-    parser.add_argument('dataset_pids', help='Newline separated file with dataset PIDs')
-    parser.add_argument('processed_pids', help="Datasets that were successfully processed",
-                        default='datacite-processed.txt')
-    parser.add_argument('delay', help='Delay between calls', default=0.25)
+    parser.add_argument('-i', '--input-file', dest='dataset_pids', help='Newline separated file with dataset PIDs')
+    parser.add_argument('-o', '--output-file', dest='processed_pids', help="Datasets that were successfully processed")
+    parser.add_argument('-d', '--delay', help='Delay between calls', default=0.25)
     args = parser.parse_args()
 
     dataverse_url = config['dataverse']['server_url']
