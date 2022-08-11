@@ -54,10 +54,10 @@ def main():
                              "If not set, the following columns are expected: Username, GivenName, FamilyName, Email, "
                              "Affiliation, Position, encryptedpassword",
                         action='store_true')
-    parser.add_argument('-k', '--builtin_users_key', help="BUILTIN_USERS_KEY set in Dataverse")
-    parser.add_argument('-r', '--dryrun', dest='dry_run', help="only logs the actions, nothing is executed",
+    parser.add_argument('-k', '--builtin-users-key', help="BUILTIN_USERS_KEY set in Dataverse")
+    parser.add_argument('-r', '--dry-run', dest='dry_run', help="only logs the actions, nothing is executed",
                         action='store_true')
-    parser.add_argument('-i', '--input_csv', help="the csv file containing the users and hashed passwords")
+    parser.add_argument('-i', '--input-csv', help="the csv file containing the users and hashed passwords")
     args = parser.parse_args()
 
     if (not args.dry_run) and args.builtin_users_key is None:
