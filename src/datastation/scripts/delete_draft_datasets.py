@@ -19,8 +19,8 @@ def main():
     parser = argparse.ArgumentParser(description='Delete datasets with the pids in the given input file. '
                                                  'Only the draft version is deleted '
                                                  'and it will fail if it is not a draft!')
-    parser.add_argument('-i', '--input-file', dest='dataset_pids_file', help='The input file with the dataset pids with'
-                                                                             ' pattern doi:prefix/shoulder/postfix')
+    parser.add_argument('-i', '--input-file', dest='dataset_pids_file', required=True,
+                        help='The input file with the dataset pids with pattern doi:prefix/shoulder/postfix')
     args = parser.parse_args()
 
     server_url = config['dataverse']['server_url']

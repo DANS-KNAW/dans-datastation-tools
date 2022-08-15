@@ -31,4 +31,4 @@ def batch_process(pids, process_action_func, output_file=None, delay=0.1, fail_o
             if delay > 0 and num < num_pids:
                 logging.debug("Sleeping for {} seconds...".format(delay))
                 time.sleep(delay)
-        logging.info("Done processing {} datasets".format(num_pids))
+        logging.info("Done processing {} out of {} datasets".format(num, num_pids))

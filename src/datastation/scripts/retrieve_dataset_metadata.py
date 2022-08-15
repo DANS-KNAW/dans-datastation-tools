@@ -17,7 +17,7 @@ def retrieve_dataset_metadata_action(server_url, pid, output_dir):
 
 def retrieve_dataset_metadata_command(server_url, input_filename, output_dir):
     logging.info('Args: {}, {}'.format(input_filename, output_dir))
-    logging("Example using server URL: {}".format(server_url))
+    logging.info("Example using server URL: {}".format(server_url))
 
     if os.path.isdir(output_dir):
         logging.info("Skipping dir creation, because it already exists: " + output_dir)
@@ -38,7 +38,8 @@ def main():
                         help='The output dir, for storing the metadata files retrieved')
     args = parser.parse_args()
 
-    retrieve_dataset_metadata_command(config['dataverse']['server_url'], args.pids_file, args.output_dir)
+    server_url = config['dataverse']['server_url']
+    retrieve_dataset_metadata_command(server_url, args.pids_file, args.output_dir)
 
 
 if __name__ == '__main__':

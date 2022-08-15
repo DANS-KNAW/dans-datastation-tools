@@ -21,7 +21,7 @@ def main():
     parser.add_argument('-i', '--input-file', dest='pids_file', help='The input file with the dataset pids')
     parser.add_argument('-t', '--type', dest='version_upgrade_type', default='major',
                         help='The type of version upgrade, "minor" or "updatecurrent" (only for superusers) for '
-                             'metadata changes, default is "major".')
+                             'metadata changes, default is "major", which is also needed for the initial version.')
     args = parser.parse_args()
 
     server_url = config['dataverse']['server_url']
