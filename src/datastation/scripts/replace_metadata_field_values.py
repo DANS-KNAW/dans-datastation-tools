@@ -1,5 +1,6 @@
 import argparse
 import logging
+import json
 
 from datastation.batch_processing import batch_process
 from datastation.config import init
@@ -38,23 +39,27 @@ def replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, fi
     replace_to = field_to_value
 
     replaced = False
+    found_field_name = False
     for field in mdb_fields:
         # expecting (assuming) one and only one instance,
         # but the code will try to change all it can find
         if field['typeName'] == replace_field:
             logging.debug("{}: Found {} with value {} ".format(pid, field['typeName'],  field['value']))
+            updated_field = field.copy()
             if field['value'] == replace_from:
-                updated_field = field.copy()
+                found_field_name = True
                 # be safe and mutate a copy
                 updated_field['value'] = replace_to
-                logging.debug("{}: Try updating it with: " .format(pid, updated_field['value']))
-                replace_dataset_metadatafield(server_url, api_token, pid, updated_field)
-                logging.info("{}: Updated {} from {} to {}".format(pid, replace_field, replace_from, replace_to))
+                logging.debug("{}: Try updating it with: {}" .format(pid, updated_field['value']))
+                updated_fields = {'fields': [updated_field]}
+                logging.debug(json.dumps(updated_fields))
+                replace_dataset_metadatafield(server_url, api_token, pid, updated_fields)
+                logging.debug("{}: Updated {} from {} to {}".format(pid, replace_field, replace_from, replace_to))
                 replaced = True
             else:
-                logging.info("Leave as-is")
-    if not replaced:
-        logging.info("{}: {} not found with value {}, nothing to replace".format(pid, replace_field, replace_from))
+                logging.debug("Found {} instead of {}, Leave as-is".format(field['value'], replace_from))
+    if not found_field_name:
+        logging.debug("{}: {} not found, nothing to replace".format(pid, replace_field))
     return replaced
 
 
@@ -76,11 +81,12 @@ def main():
     config = init()
     parser = argparse.ArgumentParser(
         description='Replace metadata field in datasets with the dois in the given input file. See the json metadata '
-                    'export (dataverse_json) to see what names are possible for the fields and metadata blocks')
+                    'export (dataverse_json) to see what names are possible for the fields and metadata blocks. The '
+                    'field must have `multiple=false` and typeClass=`primitive`. The field must already be present.')
     parser.add_argument("-m", "--metadata-block", help="Name of the metadata block", dest="mdb_name")
     parser.add_argument("-n", "--field-name", help="Name of the field (json typeName)", dest="field_name")
     parser.add_argument("-f", "--from-value", help="Value to be replaced", dest="field_from_value")
-    parser.add_argument("-t", "--to-value", help="Value replacing (the new value)", dest="field_to_value")
+    parser.add_argument("-t", "--to-value", help="The replacement value (the new value)", dest="field_to_value")
     parser.add_argument('-i', '--input-file', dest='pids_file', help='The input file with the dataset dois')
     args = parser.parse_args()
 
