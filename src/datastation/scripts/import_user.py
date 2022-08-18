@@ -47,14 +47,14 @@ def connect_to_database(host: str, db: str, user: str, password: str):
 def main():
     config = init()
 
-    parser = argparse.ArgumentParser(description='Import users into a Dataverse using the BUILTIN_USERS_KEY')
+    parser = argparse.ArgumentParser(description='Import users into a Dataverse using the BuiltinUsers.KEY')
     parser.add_argument('--easy', dest='is_easy_format',
                         help="The csv file is exported from EASY and has the following columns: UID, INITIALS, SURNAME,"
                              "PREFIX, EMAIL, ORGANISATION, FUNCTION, PASSWORD-HASH. "
                              "If not set, the following columns are expected: Username, GivenName, FamilyName, Email, "
                              "Affiliation, Position, encryptedpassword",
                         action='store_true')
-    parser.add_argument('-k', '--builtin-users-key', help="BUILTIN_USERS_KEY set in Dataverse")
+    parser.add_argument('-k', '--builtin-users-key', help="BuiltinUsers.KEY set in Dataverse")
     parser.add_argument('-r', '--dry-run', dest='dry_run', help="only logs the actions, nothing is executed",
                         action='store_true')
     parser.add_argument('-i', '--input-csv', help="the csv file containing the users and hashed passwords")
