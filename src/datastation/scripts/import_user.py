@@ -12,13 +12,16 @@ from datastation.config import init
 def import_user(dv_server_url, add_builtin_users_key, user, dvndb_conn, dryrun):
     logging.info("Add user {} with email {}".format(user["userName"], user["email"]))
     dummy_password = "1234AB"
+
+    user_json = json.dumps(user)
     api_call = "{}/api/builtin-users?password={}&key={}&sendEmailNotification=false".format(
         dv_server_url, dummy_password, add_builtin_users_key)
     if dryrun:
         logging.info("dry-run, not calling {}".format(api_call))
+        logging.debug(user_json)
     else:
-        header = {'Content-type': 'application/json'}
-        dv_resp = requests.post(api_call, data=json.dumps(user), headers=header)
+        header = {'Content-Type': 'application/json'}
+        dv_resp = requests.post(api_call, data=user_json, headers=header)
         response = dv_resp.json()
         if response["status"] == "ERROR":
             logging.error("response from dataverse API: {}".format(response["message"]))
@@ -70,14 +73,17 @@ def main():
                                              config['dataverse']['db']['user'], config['dataverse']['db']['password'])
 
         with open(args.input_csv, "r") as input_file_handler:
-            csv_reader = csv.DictReader(input_file_handler, delimiter=',')
+            csv_delimeter = ';' if args.is_easy_format else ','
+            csv_reader = csv.DictReader(input_file_handler, delimiter=csv_delimeter)
 
             for row in csv_reader:
                 if args.is_easy_format:
                     last_name = (row["PREFIX"], row["SURNAME"])
+                    # the PASSWORD-HASH starts with '{SHA}' which needs to be stripped
+                    encrypted_password = row["PASSWORD-HASH"][5:]
                     user = {"userName": row["UID"], "firstName": row["INITIALS"], "lastName": " ".join(last_name),
                             "email": row["EMAIL"], "affiliation": row["ORGANISATION"], "position": row["FUNCTION"],
-                            "encrypted_password": row["PASSWORD-HASH"]}
+                            "encrypted_password": encrypted_password}
                 else:
                     user = {"userName": row["Username"], "firstName": row["GivenName"],
                             "lastName": row["FamilyName"], "email": row["Email"], "affiliation": row["Affiliation"],
