@@ -34,12 +34,16 @@ def main():
     parser = argparse.ArgumentParser(description='Retrieves the metadata for all published datasets with the pids in '
                                                  'the given inputfile')
     parser.add_argument('-i', '--input-file', dest='pids_file', help='The input file with the dataset pids')
+    parser.add_argument('-p', '--pid', help='Pid of single dataset to retrieve the metadata for')
     parser.add_argument('-o', '--output', dest='output_dir',
                         help='The output dir, for storing the metadata files retrieved')
     args = parser.parse_args()
 
     server_url = config['dataverse']['server_url']
-    retrieve_dataset_metadata_command(server_url, args.pids_file, args.output_dir)
+    if args.pid is not None:
+        retrieve_dataset_metadata_action(server_url, args.pid, args.output_dir)
+    else:
+        retrieve_dataset_metadata_command(server_url, args.pids_file, args.output_dir)
 
 
 if __name__ == '__main__':
