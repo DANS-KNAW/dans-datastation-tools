@@ -33,9 +33,9 @@ def retrieve_json(dv_pid, dv_server_url):
     dv_resp.raise_for_status()
 
 
-def convert_dataset_metadata_command(config, pids_file, input_dir, output_dir):
+def convert_dataset_metadata_command(server_url, pids_file, input_dir, output_dir):
     print('Args: ' + input_dir + ',  ' + output_dir)
-    print("Example using server URL: " + config['dataverse']['server_url'])
+    print("Example using server URL: " + server_url)
 
     # create input dir if not exists!
     if os.path.isdir(input_dir):
@@ -55,7 +55,7 @@ def convert_dataset_metadata_command(config, pids_file, input_dir, output_dir):
     timestamp_str = '_' + datetime.now().strftime("%Y%m%d_%H%M%S")
     output_pid_file = "out{}.txt".format(timestamp_str)
 
-    batch_process(pids, lambda pid: convert_dataset_metadata_action(config['dataverse']['server_url'], pid, input_dir,
+    batch_process(pids, lambda pid: convert_dataset_metadata_action(server_url, pid, input_dir,
                                                                     output_dir), output_pid_file, delay=0.0)
 
 
@@ -66,7 +66,7 @@ def main():
                     ' it in the metadata_dir. The transformed metadata is then stored in the converted_dir.')
     parser.add_argument('-d', '--datasets', dest='input_file', help='The input file with the dataset dois with pattern '
                                                    'doi:prefix/shoulder/postfix')
-    parser.add_argument('-m', '--metadata-dir',
+    parser.add_argument('-m', '--metadata-dir', required=True,
                         help='The input dir with the dataset metadata files. If the folder is empty or does not exist'
                              'the json files are retrieved from dataverse and stored with file name '
                              'doi_prefix_shoulder_suffix.json')
@@ -74,7 +74,7 @@ def main():
                         help='The output dir, for storing the converted metadata files')
     args = parser.parse_args()
 
-    convert_dataset_metadata_command(config, args.input_file, args.metadata_dir, args.converted_dir)
+    convert_dataset_metadata_command(config['dataverse']['server_url'], args.input_file, args.metadata_dir, args.converted_dir)
 
 
 if __name__ == '__main__':

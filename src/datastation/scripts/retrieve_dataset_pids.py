@@ -17,7 +17,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description='Retrieves the pids for all published datasets in the given collection')
-    parser.add_argument('-o', '--output-dir', default='.', dest='output_dir',
+    parser.add_argument('-o', '--output-dir', dest='output_dir', required=True,
                         help='The output file, for storing the pids retrieved')
     parser.add_argument('-f', '--output-file', dest='output_file',
                         help='name of the output file that will contain all the pids of the published datasets. '
