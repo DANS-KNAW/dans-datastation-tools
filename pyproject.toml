@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dans-datastation-tools"
-version = "0.5.0"
+version = "0.6.0"
 description = "Command line utilities for Data Station application management"
 authors = ["DANS-KNAW"]
 packages = [
@@ -13,11 +13,13 @@ requests = "^2.26.0"
 lxml = "^4.8.0"
 dicttoxml = "^1.7.4"
 pyYAML = "^6.0"
-psycopg="^3.0.15"
+psycopg = "^3.0.16"
+
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 mkdocs = "==1.3.0"
+psycopg_binary = "^3.0.16"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -37,3 +39,5 @@ dv-reindex-datasets="datastation.scripts.reindex_datasets:main"
 dv-retrieve-dataset-pids="datastation.scripts.retrieve_dataset_pids:main"
 dv-retrieve-dataset-metadata="datastation.scripts.retrieve_dataset_metadata:main"
 dv-retrieve-dataset-metadata-field="datastation.scripts.retrieve_dataset_metadata_field:main"
+dv-import-users="datastation.scripts.import_user:main"
+dv-prestage-files="datastation.scripts.prestage_files:main"

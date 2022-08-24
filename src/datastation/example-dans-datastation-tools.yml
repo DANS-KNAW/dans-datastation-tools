@@ -2,6 +2,11 @@ dataverse:
   api_token: your-api-token-here
   server_url: 'http://localhost:8080'
   files_root: your-files-root-here
+  db:
+    host: localhost
+    dbname: dvndb
+    user: dvnuser
+    password: your-password-here
 
 logging:
   version: 1

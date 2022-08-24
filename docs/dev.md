@@ -6,17 +6,35 @@ This page contains information for developers about how to contribute to this pr
 Set-up
 ------
 
-The project uses [poetry] for a build system. It is recommended that you install everything, including poetry, in a
-virtual environment.
+The project uses [poetry] for a build system. It is recommended practise to install poetry globally (or for your user),
+so
+*not* in a virtual environment. Poetry itself will create and manage a virtual environment to install the development
+dependencies. To install poetry you can use `brew` on MacOS, or you can use `python3 -m pip poetry`. (If pip is not
+present, first execute `python3 -m ensurepip`.)
 
-```shell
-git clone 
-cd dans-datastation-tools
-python3 -m venv venv
-source venv/bin/activate
-python3 -m pip install poetry 
+After `poetry` is installed execute:
+
+```bash
 poetry install
 ```
+
+This will install the project and its dependencies in the Poetry virtual environment
+
+### Troubleshooting
+
+If your MacOS Xcode tools are out of date, you may have to reinstall them. Otherwise the installation of the dependency
+`lxml` will fail, complaining that `clang` cannot be executed. This happens on MacOS Monterey when `clang` is at version
+
+11. MacOS will, however, tell you that XCode is up-to-date when you try to upgrade.
+
+To fix this:
+
+```bash
+sudo rm -rf /Library/Developer/CommandLineTools 
+sudo xcode-select --install
+```
+
+After this `clang --version` should return a version number greater than 11.
 
 Testing commands
 ----------------
@@ -39,30 +57,29 @@ There seems to be no special support for poetry with this respect. The only way 
 found is to just call the entry-point script under `src/datastation/scripts`.
 
 !!! Warning
-    
+
     Change the working directory of the run configuration to the project root directory, so that you don't end up with
     a `.dans-datastation-tools.yml` file inside the `src/datastation/scripts` directory.
 
 Adding to this documentation site
 ---------------------------------
-
-Edit the markdown pages in the `docs` folder then run the site locally.
-
-In an active `venv`:
-```shell
-pip3 install -r .github/workflows/mkdocs/requirements.txt # only once
-mkdocs serve
-```
+See [dans-dev-tools](https://github.com/DANS-KNAW/dans-dev-tools#startsh-scripts):
+`start-virtual-env.sh` and `start-mkdocs.sh`.
 
 Browse to <http://127.0.0.1:8000>{:target=_blank} to view your changes.
- 
+
+Note that here we are using a separate virtual environment. This way we don't get the dependencies
+for `dans-datastation-tools`
+and the doc site confused.
+
 Coding style
 ------------
 
 * Except for input from configured APIs such as Dataverse and DataCite, prefer reading input from:
     1. The command line (for simple values)
-    2. The standard input (for lists o)
+    2. The standard input (for longer inputs)
 * Write output to the standard output
-* Write status messages (OK, Oops, ...) for the end user to the standard error
+* Write status messages ("OK", "Oops", etc) for the end user to the standard error
 * Write all other information to the logs (at an appropriate level)
-* Get all the configuration variables from the `config` dictionary in the `main` function and pass them to down to 
+* Get all the configuration variables from the `config` dictionary in the `main` function and pass them to down to the
+  functions instead of passing down the complete config dictionary.
