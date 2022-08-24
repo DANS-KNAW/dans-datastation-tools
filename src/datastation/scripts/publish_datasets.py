@@ -18,7 +18,7 @@ def publish_dataset_command(server_url, api_token, pids_file, version_upgrade_ty
 def main():
     config = init()
     parser = argparse.ArgumentParser(description='Publishes datasets with the pids in the given input file')
-    parser.add_argument('-i', '--input-file', dest='pids_file', help='The input file with the dataset pids')
+    parser.add_argument('-d', '--datasets', dest='pids_file', help='The input file with the dataset pids')
     parser.add_argument('-t', '--type', dest='version_upgrade_type', default='major',
                         help='The type of version upgrade, "minor" or "updatecurrent" (only for superusers) for '
                              'metadata changes, default is "major", which is also needed for the initial version.')

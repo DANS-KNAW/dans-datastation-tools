@@ -33,7 +33,7 @@ def main():
     config = init()
     parser = argparse.ArgumentParser(description='Retrieves the metadata for all published datasets with the pids in '
                                                  'the given inputfile')
-    parser.add_argument('-i', '--input-file', dest='pids_file', help='The input file with the dataset pids')
+    parser.add_argument('-d', '--datasets', dest='pids_file', help='The input file with the dataset pids')
     parser.add_argument('-p', '--pid', help='Pid of single dataset to retrieve the metadata for')
     parser.add_argument('-o', '--output', dest='output_dir',
                         help='The output dir, for storing the metadata files retrieved')

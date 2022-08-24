@@ -33,7 +33,7 @@ def unlock_dataset_command(server_url, api_token, pids_file):
 def main():
     config = init()
     parser = argparse.ArgumentParser(description='Unlock datasets (if locked) with the pids in the given input file')
-    parser.add_argument('-i', '--input-file', dest='pids_file', help='The input file with the dataset pids')
+    parser.add_argument('-d', '--datasets', dest='pids_file', help='The input file with the dataset pids')
     args = parser.parse_args()
     unlock_dataset_command(config['dataverse']['server_url'], config['dataverse']['api_token'], args.pids_file)
 

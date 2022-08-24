@@ -91,7 +91,7 @@ def main():
     parser.add_argument("-n", "--field-name", help="Name of the field (json typeName)", dest="field_name")
     parser.add_argument("-f", "--from-value", help="Value to be replaced", dest="field_from_value")
     parser.add_argument("-t", "--to-value", help="The replacement value (the new value)", dest="field_to_value")
-    parser.add_argument('-i', '--input-file', dest='pids_file', help='The input file with the dataset dois')
+    parser.add_argument('-d', '--datasets', dest='pids_file', help='The input file with the dataset dois')
     parser.add_argument('-p', '--pid', help="Doi of the dataset for which to replace the metadata.")
     args = parser.parse_args()
 

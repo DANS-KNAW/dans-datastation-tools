@@ -43,7 +43,7 @@ def main():
         description='Delete role assignment for user in datasets with the pids in the given input file')
     parser.add_argument("role-assignee", help="Role assignee (example: @dataverseAdmin)", required=True)
     parser.add_argument("role-alias", help="Role alias (example: contributor)", required=True)
-    parser.add_argument('-i', '--input-file', dest='dataset_pids_file',
+    parser.add_argument('-d', '--datasets', dest='dataset_pids_file',
                         help='The input file with the dataset dois with pattern doi:prefix/shoulder/postfix')
     args = parser.parse_args()
 
