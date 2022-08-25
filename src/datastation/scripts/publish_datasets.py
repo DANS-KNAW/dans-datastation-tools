@@ -19,6 +19,7 @@ def main():
     config = init()
     parser = argparse.ArgumentParser(description='Publishes datasets with the pids in the given input file')
     parser.add_argument('-d', '--datasets', dest='pids_file', help='The input file with the dataset pids')
+    parser.add_argument('-p', '--pid', help="Pid of the dataset to be published.")
     parser.add_argument('-t', '--type', dest='version_upgrade_type', default='major',
                         help='The type of version upgrade, "minor" or "updatecurrent" (only for superusers) for '
                              'metadata changes, default is "major", which is also needed for the initial version.')
@@ -27,7 +28,10 @@ def main():
     server_url = config['dataverse']['server_url']
     api_token = config['dataverse']['api_token']
 
-    publish_dataset_command(server_url, api_token, args.pids_file, args.version_upgrade_type)
+    if args.pid is not None:
+        publish_dataset(server_url, api_token, args.pid, args.version_upgrade_type)
+    else:
+        publish_dataset_command(server_url, api_token, args.pids_file, args.version_upgrade_type)
 
 
 if __name__ == '__main__':
