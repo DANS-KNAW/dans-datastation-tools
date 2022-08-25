@@ -1,7 +1,7 @@
 import argparse
-import collections.abc
 import logging
 import json
+import sys
 
 from datastation.batch_processing import batch_process
 from datastation.config import init
@@ -43,9 +43,11 @@ def replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, fi
         # but the code will try to change all it can find
         if field['typeName'] == replace_field:
             logging.debug("{}: Found {} with value {} ".format(pid, field['typeName'],  field['value']))
+            if not field['typeClass'] == 'primitive':
+                sys.exit("field {} does not have typeClass=`primitive` but {}".format(replace_field, field['typeClass']))
             # be safe and mutate a copy
             updated_field = field.copy()
-            if isinstance(field['value'], collections.abc.Sequence):
+            if field['multiple'] == 'true':
                 try:
                     index_replace_from = field['value'].index(replace_from)
                     found_replace_from = True
@@ -86,9 +88,9 @@ def main():
     parser = argparse.ArgumentParser(
         description='Replace metadata field in datasets with the dois in the given input file. See the json metadata '
                     'export (dataverse_json) to see what names are possible for the fields and metadata blocks. The '
-                    'field must have `multiple=false` and typeClass=`primitive`. The field must already be present.')
+                    'field must have typeClass=`primitive`. The field must already be present.')
     parser.add_argument("-m", "--metadata-block", help="Name of the metadata block", dest="mdb_name")
-    parser.add_argument("-n", "--field-name", help="Name of the field (json typeName)", dest="field_name")
+    parser.add_argument("-n", "--field-name", help="Name of the primitive field (json typeName)", dest="field_name")
     parser.add_argument("-f", "--from-value", help="Value to be replaced", dest="field_from_value")
     parser.add_argument("-t", "--to-value", help="The replacement value (the new value)", dest="field_to_value")
     parser.add_argument('-d', '--datasets', dest='pids_file', help='The input file with the dataset dois')
