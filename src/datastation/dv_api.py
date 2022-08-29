@@ -113,6 +113,16 @@ def delete_dataset_role_assignment(server_url, api_token, pid, assignment_id):
     dv_resp.raise_for_status()
 
 
+def add_dataset_role_assignment(server_url, api_token, pid, assignment):
+    headers = {'X-Dataverse-key': api_token, 'Content-Type': 'application/json'}
+    params = {'persistentId': pid}
+    dv_resp = requests.post(server_url + '/api/datasets/:persistentId/assignments/',
+                            headers=headers,
+                            data=json.dumps(assignment, ensure_ascii=False),
+                            params=params)
+    dv_resp.raise_for_status()
+
+
 def get_dataset_locks(server_url, pid):
     dv_resp = requests.get(server_url + '/api/datasets/:persistentId/locks?persistentId=' + pid)
     # give some feedback
