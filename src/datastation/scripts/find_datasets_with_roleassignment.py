@@ -1,5 +1,3 @@
-# dv-datasets-find-with-role-assignment '@<account>=<roleAlias>'
-
 import argparse
 import logging
 import sys
