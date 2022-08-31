@@ -28,9 +28,9 @@ def update_datacite_record(dataverse_url, dataverse_api_token):
     return update_datacite_record_for_pid
 
 
-def update_datacite_records(dataverse_url, dataverse_api_token, pid_file, out_file, delay):
+def update_datacite_records(dataverse_url, dataverse_api_token, pid_file, delay):
     pids = load_pids(pid_file)
-    batch_process(pids, update_datacite_record(dataverse_url, dataverse_api_token), out_file, delay)
+    batch_process(pids, update_datacite_record(dataverse_url, dataverse_api_token), delay)
 
 
 def main():

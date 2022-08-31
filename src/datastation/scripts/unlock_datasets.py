@@ -27,7 +27,7 @@ def unlock_dataset_action(server_url, api_token, pid):
 def unlock_dataset_command(server_url, api_token, pids_file):
     # could be fast, but depends on number of files inside the dataset
     batch_process(load_pids(pids_file),
-                  lambda pid: unlock_dataset_action(server_url, api_token, pid), output_file=None, delay=1.5)
+                  lambda pid: unlock_dataset_action(server_url, api_token, pid), delay=1.5)
 
 
 def main():

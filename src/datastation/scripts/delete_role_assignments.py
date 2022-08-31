@@ -39,7 +39,7 @@ def delete_roleassignments_command(server_url, api_token, output_file, pids_file
     csv_file, csv_writer = open_csv_file(headers, output_file)
 
     batch_process(pids, lambda pid: delete_roleassignment(server_url,api_token, csv_writer, pid, role_assignee,
-                                                          role_alias, dry_run), None, delay=1.5)
+                                                          role_alias, dry_run), delay=1.5)
 
     if not output_file == '-':
         csv_file.close()
@@ -69,4 +69,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    

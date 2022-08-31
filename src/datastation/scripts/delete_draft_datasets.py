@@ -11,7 +11,7 @@ from datastation.dv_api import delete_dataset_draft
 def delete_dataset_command(server_url, api_token, pids_file):
     pids = load_pids(pids_file)
 
-    batch_process(pids, lambda pid: delete_dataset_draft(server_url, api_token, pid), output_file=None, delay=2.0)
+    batch_process(pids, lambda pid: delete_dataset_draft(server_url, api_token, pid), delay=2.0)
 
 
 def main():

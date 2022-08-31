@@ -26,7 +26,7 @@ def retrieve_dataset_metadata_command(server_url, input_filename, output_dir):
         os.makedirs(output_dir)
 
     batch_process(load_pids(input_filename), lambda pid: retrieve_dataset_metadata_action(server_url, pid, output_dir),
-                  output_file=None, delay=0.2)
+                  delay=0.2)
 
 
 def main():

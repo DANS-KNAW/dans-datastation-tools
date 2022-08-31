@@ -12,7 +12,7 @@ def publish_dataset_command(server_url, api_token, pids_file, version_upgrade_ty
     # Long delay because publish is doing a lot after the async. request is returning
     # and sometimes datasets get locked
     batch_process(pids, lambda pid: publish_dataset(server_url, api_token, pid, version_upgrade_type),
-                  output_file=None, delay=5.0)
+                  delay=5.0)
 
 
 def main():

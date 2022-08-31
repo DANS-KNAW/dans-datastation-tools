@@ -10,7 +10,7 @@ def reindex_dataset_command(config, server_url, pids_file):
     pids = load_pids(pids_file)
 
     # could be fast, but depends on number of files inside the dataset
-    batch_process(pids, lambda pid: reindex_dataset(server_url, pid), output_file=None, delay=1.5)
+    batch_process(pids, lambda pid: reindex_dataset(server_url, pid), delay=1.5)
 
 
 def main():

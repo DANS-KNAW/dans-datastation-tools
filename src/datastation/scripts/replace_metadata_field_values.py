@@ -76,7 +76,7 @@ def replace_metadata_field_value_command(server_url, api_token, pids_file, mdb_n
     batch_process(pids,
                   lambda pid: replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, field_name,
                                                                   field_from_value,  field_to_value),
-                  output_file=None, delay=5.0)
+                  delay=5.0)
 
 
 # Note that the datasets that got changed get into a DRAFT status
