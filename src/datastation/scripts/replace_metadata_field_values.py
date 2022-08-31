@@ -18,8 +18,7 @@ def replace_metadatafield(server_url, api_token, pid, updated_field):
     return True
 
 
-def replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, field_name, field_from_value,
-                                        field_to_value):
+def replace_metadata_field_value(server_url, api_token, pid, field_name, field_from_value, field_to_value):
     # Getting the metadata is not always needed when doing a replacement,
     # but when you need to determine if replace is needed by inspecting the current content
     # you need to 'get' it first.
@@ -27,54 +26,53 @@ def replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, fi
     # and have that generate a list with pids to process 'blindly'.
     resp_data = get_dataset_metadata(server_url, api_token, pid)
     # print(resp_data['datasetPersistentId'])
-    mdb_fields = resp_data['metadataBlocks'][mdb_name]['fields']
-    # print(json.dumps(mdb_fields, indent=2))
 
-    # metadata field replacement (an idempotent action I think)
-    # replace replace_from with replace_to for field with typeName replace_field
     replace_field = field_name
     replace_from = field_from_value
     replace_to = field_to_value
-
-    replaced = False
     found_replace_from = False
-    for field in mdb_fields:
-        # expecting (assuming) one and only one instance,
-        # but the code will try to change all it can find
-        if field['typeName'] == replace_field:
-            logging.debug("{}: Found {} with value {} ".format(pid, field['typeName'],  field['value']))
-            if not field['typeClass'] == 'primitive':
-                sys.exit("field {} does not have typeClass=`primitive` but {}".format(replace_field, field['typeClass']))
-            # be safe and mutate a copy
-            updated_field = field.copy()
-            if field['multiple'] == 'true':
-                try:
-                    index_replace_from = field['value'].index(replace_from)
-                    found_replace_from = True
-                    updated_field['value'][index_replace_from] = replace_to
-                    replaced = replace_metadatafield(server_url, api_token, pid, updated_field)
-                    logging.debug("{}: Updated {} from {} to {}".format(pid, replace_field, replace_from, replace_to))
-                except ValueError:
-                    logging.debug("{} not found in {}".format(replace_from, field['value']))
-            else:
-                if field['value'] == replace_from:
-                    found_replace_from = True
-                    updated_field['value'] = replace_to
-                    replaced = replace_metadatafield(server_url, api_token, pid, updated_field)
-                    logging.debug("{}: Updated {} from {} to {}".format(pid, replace_field, replace_from, replace_to))
+    replaced = False
+
+    for metadata_block in resp_data['metadataBlocks']:
+        mdb_fields = resp_data['metadataBlocks'][metadata_block]['fields']
+
+        for field in mdb_fields:
+            # expecting (assuming) one and only one instance,
+            # but the code will try to change all it can find
+            if field['typeName'] == replace_field:
+                logging.debug("{}: Found {} with value {} ".format(pid, field['typeName'],  field['value']))
+                if not field['typeClass'] == 'primitive':
+                    sys.exit("field {} does not have typeClass=`primitive` but {}".format(replace_field, field['typeClass']))
+                # be safe and mutate a copy
+                updated_field = field.copy()
+                if field['multiple'] == 'true':
+                    try:
+                        index_replace_from = field['value'].index(replace_from)
+                        found_replace_from = True
+                        updated_field['value'][index_replace_from] = replace_to
+                        replaced = replace_metadatafield(server_url, api_token, pid, updated_field)
+                        logging.debug("{}: Updated {} from {} to {}".format(pid, replace_field, replace_from, replace_to))
+                    except ValueError:
+                        logging.debug("{} not found in {}".format(replace_from, field['value']))
                 else:
-                    logging.debug("Found {} instead of {}, Leave as-is".format(field['value'], replace_from))
+                    if field['value'] == replace_from:
+                        found_replace_from = True
+                        updated_field['value'] = replace_to
+                        replaced = replace_metadatafield(server_url, api_token, pid, updated_field)
+                        logging.debug("{}: Updated {} from {} to {}".format(pid, replace_field, replace_from, replace_to))
+                    else:
+                        logging.debug("Found {} instead of {}, Leave as-is".format(field['value'], replace_from))
     if not found_replace_from:
         logging.debug("{}: {} not found, nothing to replace".format(pid, replace_field))
     return replaced
 
 
-def replace_metadata_field_value_command(server_url, api_token, delay, pids_file, mdb_name, field_name,
+def replace_metadata_field_value_command(server_url, api_token, delay, pids_file, field_name,
                                          field_from_value, field_to_value):
     pids = load_pids(pids_file)
 
     batch_process(pids,
-                  lambda pid: replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, field_name,
+                  lambda pid: replace_metadata_field_value(server_url, api_token, pid, field_name,
                                                                   field_from_value,  field_to_value), delay)
 
 
@@ -88,7 +86,7 @@ def main():
         description='Replace metadata field in datasets with the dois in the given input file. See the json metadata '
                     'export (dataverse_json) to see what names are possible for the fields and metadata blocks. The '
                     'field must have typeClass=`primitive`. The field must already be present.')
-    parser.add_argument("-m", "--metadata-block", help="Name of the metadata block", dest="mdb_name")
+
     parser.add_argument("-n", "--field-name", help="Name of the primitive field (json typeName)", dest="field_name")
     parser.add_argument("-f", "--from-value", help="Value to be replaced", dest="field_from_value")
     parser.add_argument("-t", "--to-value", help="The replacement value (the new value)", dest="field_to_value")
@@ -101,10 +99,10 @@ def main():
     api_token = config['dataverse']['api_token']
 
     if args.pid is not None:
-        replace_metadata_field_value_action(server_url, api_token, args.delay, args.pid, args.mdb_name, args.field_name,
-                                            args.field_from_value, args.field_to_value)
+        replace_metadata_field_value(server_url, api_token, args.pid, args.field_name,
+                                      args.field_from_value, args.field_to_value)
     else:
-        replace_metadata_field_value_command(server_url, api_token, args.delay, args.pids_file, args.mdb_name,
+        replace_metadata_field_value_command(server_url, api_token, args.delay, args.pids_file,
                                              args.field_name, args.field_from_value, args.field_to_value)
 
 
