@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 
 from datetime import datetime
@@ -28,8 +29,8 @@ def oai_harvest_command(server_url, output_dir, format, set=None):
     records_output_dir = os.path.join(output_dir, harvest_dirname)
     os.makedirs(records_output_dir)
 
-    print("Harvesting {} from {} in format {}".format(set, server_url, format))
-    print("Storing results in {}".format(os.path.abspath(records_output_dir)))
+    logging.info("Harvesting {} from {} in format {}".format(set, server_url, format))
+    logging.info("Storing results in {}".format(os.path.abspath(records_output_dir)))
     xml_doc = get_oai_records(server_url, format=format, set=set)
 
     counter = 0
@@ -41,7 +42,7 @@ def oai_harvest_command(server_url, output_dir, format, set=None):
 
     # The resumptionToken is empty (no text) when we have all the records
     while token is not None and token.text is not None:
-        print("In page {} of the recordset, resumption token found: {}".format(counter, token.text))
+        logging.info("In page {} of the recordset, resumption token found: {}".format(counter, token.text))
         xml_doc = get_oai_records_resume(server_url, token.text)
         counter += 1
         save_oai_records(xml_doc, counter, records_output_dir)
