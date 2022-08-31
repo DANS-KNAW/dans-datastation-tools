@@ -22,14 +22,14 @@ def save_oai_records(xml_doc, counter, records_output_dir):
 
 
 def oai_harvest_command(server_url, output_dir, format, set=None):
-    # create directory if needed
+    # create directory for this export
     timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
     harvest_dirname = 'oai_harvest_' + format + '_' + timestamp_str
     records_output_dir = os.path.join(output_dir, harvest_dirname)
     os.makedirs(records_output_dir)
 
-    print("Harvesting from: {} format: {} set: {}".format(server_url, format, set))
-    print("Storing resutls in: {}".format(os.path.abspath(records_output_dir)))
+    print("Harvesting {} from {} in format {}".format(set, server_url, format))
+    print("Storing results in {}".format(os.path.abspath(records_output_dir)))
     xml_doc = get_oai_records(server_url, format=format, set=set)
 
     counter = 0
@@ -41,7 +41,7 @@ def oai_harvest_command(server_url, output_dir, format, set=None):
 
     # The resumptionToken is empty (no text) when we have all the records
     while token is not None and token.text is not None:
-        print("In recordset {}, Resumption token found: {}".format(counter, token.text))
+        print("In page {} of the recordset, resumption token found: {}".format(counter, token.text))
         xml_doc = get_oai_records_resume(server_url, token.text)
         counter += 1
         save_oai_records(xml_doc, counter, records_output_dir)
@@ -51,8 +51,11 @@ def oai_harvest_command(server_url, output_dir, format, set=None):
 def main():
     config = init()
     parser = argparse.ArgumentParser(description='Harvest dataset metadata records via the OAI-PMH protocol')
-    parser.add_argument('-f', '--format', default='oai_dc', help='The format of the records to be harvested.')
-    parser.add_argument('-s', '--set', default='', help='The recordset to be harvested.')
+    parser.add_argument('-f', '--format', default='oai_dc',
+                        help='The PMH metadataPrefix in which the metadata should be harvested.')
+    parser.add_argument('-s', '--set', default='', help='The PMH recordset to be harvested.')
+    parser.add_argument('-o', '--output-dir', dest='output_dir', required=True,
+                        help="The folder to store the exported metadata records")
     args = parser.parse_args()
 
     oai_format = args.format  # Note that an important one we have in dataverse is 'oai_datacite'
@@ -61,9 +64,8 @@ def main():
         oai_set = args.set
 
     server_url = config['dataverse']['server_url']
-    output_dir = config['files']['output_dir']
 
-    oai_harvest_command(server_url, output_dir, format=oai_format, set=oai_set)
+    oai_harvest_command(server_url, args.output_dir, format=oai_format, set=oai_set)
 
 
 if __name__ == '__main__':
