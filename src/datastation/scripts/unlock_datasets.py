@@ -24,18 +24,23 @@ def unlock_dataset_action(server_url, api_token, pid):
     return deleted_locks
 
 
-def unlock_dataset_command(server_url, api_token, pids_file):
+def unlock_dataset_command(server_url, api_token, delay, pids_file):
     # could be fast, but depends on number of files inside the dataset
     batch_process(load_pids(pids_file),
-                  lambda pid: unlock_dataset_action(server_url, api_token, pid), delay=1.5)
+                  lambda pid: unlock_dataset_action(server_url, api_token, pid), delay)
 
 
 def main():
     config = init()
     parser = argparse.ArgumentParser(description='Unlock datasets (if locked) with the pids in the given input file')
     parser.add_argument('-d', '--datasets', dest='pids_file', help='The input file with the dataset pids')
+    parser.add_argument('--delay', default=1.5, help="Delay in seconds")
     args = parser.parse_args()
-    unlock_dataset_command(config['dataverse']['server_url'], config['dataverse']['api_token'], args.pids_file)
+
+    server_url = config['dataverse']['server_url']
+    api_token = config['dataverse']['api_token']
+
+    unlock_dataset_command(server_url, api_token, args.delay, args.pids_file)
 
 
 if __name__ == '__main__':

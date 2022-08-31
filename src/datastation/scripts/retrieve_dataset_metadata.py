@@ -15,7 +15,7 @@ def retrieve_dataset_metadata_action(server_url, pid, output_dir):
     store_dataset_result(pid, dataset_metadata, output_dir)
 
 
-def retrieve_dataset_metadata_command(server_url, input_filename, output_dir):
+def retrieve_dataset_metadata_command(server_url, delay, input_filename, output_dir):
     logging.info('Args: {}, {}'.format(input_filename, output_dir))
     logging.info("Example using server URL: {}".format(server_url))
 
@@ -26,7 +26,7 @@ def retrieve_dataset_metadata_command(server_url, input_filename, output_dir):
         os.makedirs(output_dir)
 
     batch_process(load_pids(input_filename), lambda pid: retrieve_dataset_metadata_action(server_url, pid, output_dir),
-                  delay=0.2)
+                  delay)
 
 
 def main():
@@ -37,13 +37,14 @@ def main():
     parser.add_argument('-p', '--pid', help='Pid of single dataset to retrieve the metadata for')
     parser.add_argument('-o', '--output', dest='output_dir',
                         help='The output dir, for storing the metadata files retrieved')
+    parser.add_argument('--delay', default=0.2, help="Delay in seconds")
     args = parser.parse_args()
 
     server_url = config['dataverse']['server_url']
     if args.pid is not None:
-        retrieve_dataset_metadata_action(server_url, args.pid, args.output_dir)
+        retrieve_dataset_metadata_action(server_url, args.delay, args.pid, args.output_dir)
     else:
-        retrieve_dataset_metadata_command(server_url, args.pids_file, args.output_dir)
+        retrieve_dataset_metadata_command(server_url, args.delay, args.pids_file, args.output_dir)
 
 
 if __name__ == '__main__':

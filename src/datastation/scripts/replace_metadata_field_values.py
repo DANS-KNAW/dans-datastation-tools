@@ -69,14 +69,13 @@ def replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, fi
     return replaced
 
 
-def replace_metadata_field_value_command(server_url, api_token, pids_file, mdb_name, field_name,
+def replace_metadata_field_value_command(server_url, api_token, delay, pids_file, mdb_name, field_name,
                                          field_from_value, field_to_value):
     pids = load_pids(pids_file)
 
     batch_process(pids,
                   lambda pid: replace_metadata_field_value_action(server_url, api_token, pid, mdb_name, field_name,
-                                                                  field_from_value,  field_to_value),
-                  delay=5.0)
+                                                                  field_from_value,  field_to_value), delay)
 
 
 # Note that the datasets that got changed get into a DRAFT status
@@ -95,17 +94,18 @@ def main():
     parser.add_argument("-t", "--to-value", help="The replacement value (the new value)", dest="field_to_value")
     parser.add_argument('-d', '--datasets', dest='pids_file', help='The input file with the dataset dois')
     parser.add_argument('-p', '--pid', help="Doi of the dataset for which to replace the metadata.")
+    parser.add_argument('--delay', default=5.0, help="Delay in seconds")
     args = parser.parse_args()
 
     server_url = config['dataverse']['server_url']
     api_token = config['dataverse']['api_token']
 
     if args.pid is not None:
-        replace_metadata_field_value_action(server_url, api_token, args.pid, args.mdb_name, args.field_name,
+        replace_metadata_field_value_action(server_url, api_token, args.delay, args.pid, args.mdb_name, args.field_name,
                                             args.field_from_value, args.field_to_value)
     else:
-        replace_metadata_field_value_command(server_url, api_token, args.pids_file, args.mdb_name, args.field_name,
-                                             args.field_from_value, args.field_to_value)
+        replace_metadata_field_value_command(server_url, api_token, args.delay, args.pids_file, args.mdb_name,
+                                             args.field_name, args.field_from_value, args.field_to_value)
 
 
 if __name__ == '__main__':

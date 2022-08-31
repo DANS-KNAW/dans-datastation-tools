@@ -32,14 +32,15 @@ def delete_roleassignment(server_url, api_token, csv_writer, pid, role_assignee,
             delete_dataset_role_assignment(server_url, api_token, pid, assignment_id)
 
 
-def delete_roleassignments_command(server_url, api_token, output_file, pids_file, role_assignee, role_alias, dry_run):
+def delete_roleassignments_command(server_url, api_token, output_file, pids_file,
+                                   role_assignee, role_alias, dry_run, delay):
     pids = load_pids(pids_file)
 
     headers = ["DOI", "Modified", "Assignee", "Role", "Change"]
     csv_file, csv_writer = open_csv_file(headers, output_file)
 
     batch_process(pids, lambda pid: delete_roleassignment(server_url,api_token, csv_writer, pid, role_assignee,
-                                                          role_alias, dry_run), delay=1.5)
+                                                          role_alias, dry_run), delay)
 
     if not output_file == '-':
         csv_file.close()
@@ -55,6 +56,7 @@ def main():
                         default='dataset_pids.txt', help='The input file with the dataset pids')
     parser.add_argument('-r', '--report', required=True, dest='output_file',
                         help="Destination of the output report file, '-' sends it to stdout")
+    parser.add_argument('--delay', default=1.5, help="Delay in seconds")
     args = parser.parse_args()
 
     role_assignee = args.role_assignment.split('=')[0]
@@ -64,7 +66,7 @@ def main():
     api_token = config['dataverse']['api_token']
 
     delete_roleassignments_command(server_url, api_token, args.output_file, args.pids_file, role_assignee, role_alias,
-                                   args.dry_run)
+                                   args.dry_run, args.delay)
 
 
 if __name__ == '__main__':

@@ -8,10 +8,10 @@ from datastation.ds_pidsfile import load_pids
 from datastation.dv_api import delete_dataset_draft
 
 
-def delete_dataset_command(server_url, api_token, pids_file):
+def delete_dataset_command(server_url, api_token, pids_file, delay):
     pids = load_pids(pids_file)
 
-    batch_process(pids, lambda pid: delete_dataset_draft(server_url, api_token, pid), delay=2.0)
+    batch_process(pids, lambda pid: delete_dataset_draft(server_url, api_token, pid), delay)
 
 
 def main():
@@ -21,6 +21,7 @@ def main():
                                                  'and it will fail if it is not a draft!')
     parser.add_argument('-d', '--datasets', dest='dataset_pids_file', required=True,
                         help='The input file with the dataset pids with pattern doi:prefix/shoulder/postfix')
+    parser.add_argument('--delay', default=2.0, help="Delay in seconds")
     args = parser.parse_args()
 
     server_url = config['dataverse']['server_url']
@@ -34,7 +35,7 @@ def main():
         sys.exit(1)
     logging.info("Starting deletion")
 
-    delete_dataset_command(server_url, api_token, pids_file=args.dataset_pids_file)
+    delete_dataset_command(server_url, api_token, pids_file=args.dataset_pids_file, delay=args.delay)
 
 
 if __name__ == '__main__':
