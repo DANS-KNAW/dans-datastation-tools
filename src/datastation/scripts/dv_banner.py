@@ -53,15 +53,6 @@ def main():
     subparsers = parser.add_subparsers()
 
     parser_add = subparsers.add_parser('add', help="Add a Banner Message")
-    # the required json suggest the commented options, but the values are not returned by list
-    # at first glance any message seems permanently dismissible
-    #
-    # parser_add.add_argument('-l', '--lang', dest='lang', help="Language for the added message", default='en')
-    # parser_add.add_argument('-d', '--dismissible', dest='dismissible', default=False, type=bool,
-    #                         help="False: a user can dismiss the message only for the duration of a session. "
-    #                              "True: the message can be dismissed permanently. "
-    #                              "Any value causes 'True'. A value is required because of the positional argument."
-    #                         )
     parser_add.add_argument('message', help="Message to add as Banner, note that HTML can be included.")
     parser_add.set_defaults(func=add_message)
 
