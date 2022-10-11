@@ -2,6 +2,7 @@ dataverse:
   api_token: your-api-token-here
   server_url: 'http://localhost:8080'
   files_root: your-files-root-here
+  unblock-key: changeMe
   safety_latch: ON
   db:
     host: localhost
