@@ -37,8 +37,8 @@ def list_messages(args, banner_url, headers, unblock):
     headers['Content-type'] = 'application/json'  # side effect!
     response = requests.get(f'{banner_url}?{unblock}', headers=headers)
     response.raise_for_status()
-    for item in response.json()["data"]:
-        rich.print(item)
+    for row in response.json()["data"]:
+        rich.print(row)
 
 
 def main():
