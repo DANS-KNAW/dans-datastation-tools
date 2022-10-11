@@ -33,6 +33,9 @@ dv-dataset-reindex
 dv-dataset-unlock
 dv-dataset-update-datacite-record
 
+#manage Banner Messages
+dv-banner
+
 # User management
 dv-user-import
 

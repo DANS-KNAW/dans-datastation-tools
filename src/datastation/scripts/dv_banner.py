@@ -3,47 +3,42 @@ import json
 import logging
 
 import requests
-from rich import print_json
+import rich
 
 from datastation.config import init
 
 
-def add_message(args, server_url, headers, unblock):
+def add_message(args, banner_url, headers, unblock):
     headers['Content-type'] = 'application/json'  # side effect!
-    url = f'{server_url}?{unblock}'
-    logging.debug(f'{url} {headers}')
-    data = {
+    data = json.dumps({
         "dismissibleByUser": "true",  # list does not return this value
         "messageTexts": [
             {
                 # when using another language, list returns an empty message
-                # when using multiple languages 'Accept-Language' does not seem to influence list_messages
+                # when using multiple languages, 'Accept-Language' on list_messages does not make a difference
                 "lang": "en",
                 "message": args.message
             }
         ]
-    }
-    response = requests.post(url, data=json.dumps(data), headers=headers)
+    })
+    response = requests.post(f'{banner_url}?{unblock}', data=data, headers=headers)
     print(response.content)
     response.raise_for_status()
 
 
-def remove_message(args, server_url, headers, unblock):
+def remove_message(args, banner_url, headers, unblock):
     for msg_id in args.ids:
-        url = f'{server_url}/{msg_id}?{unblock}'
-        logging.debug(f'{url} {headers}')
-        response = requests.delete(url, headers=headers)
+        response = requests.delete(f'{banner_url}/{msg_id}?{unblock}', headers=headers)
         print(response.content)
         response.raise_for_status()
 
 
-def list_messages(args, server_url, headers, unblock):
+def list_messages(args, banner_url, headers, unblock):
     headers['Content-type'] = 'application/json'  # side effect!
-    url = f'{server_url}?{unblock}'
-    logging.debug(f'{url} {headers}')
-    response = requests.get(url, headers=headers)
+    response = requests.get(f'{banner_url}?{unblock}', headers=headers)
     response.raise_for_status()
-    print(print_json(json.dumps(response.json()["data"], indent=4)))
+    for item in response.json()["data"]:
+        rich.print(item)
 
 
 def main():
@@ -56,8 +51,8 @@ def main():
     parser_add.add_argument('message', help="Message to add as Banner, note that HTML can be included.")
     parser_add.set_defaults(func=add_message)
 
-    parser_remove = subparsers.add_parser('remove', help="Remove a Banner Message by its id")
-    parser_remove.add_argument('ids', help="one or more ids of the Banner Message", nargs='+')
+    parser_remove = subparsers.add_parser('remove', help="Remove Banner Message by their id-s")
+    parser_remove.add_argument('ids', help="One or more ids of the Banner Message", nargs='+')
     parser_remove.set_defaults(func=remove_message)
 
     parser_list = subparsers.add_parser('list', help="Get a list of active Banner Messages")
@@ -69,8 +64,9 @@ def main():
     cfg = config['dataverse']
     headers = {'X-Dataverse-key': cfg["api_token"]}
     unblock = f'unblock-key={cfg["unblock-key"]}'
+    banner_url = f'{cfg["server_url"]}/api/admin/bannerMessage'
 
-    args.func(args, f'{cfg["server_url"]}/api/admin/bannerMessage', headers, unblock)
+    args.func(args, banner_url, headers, unblock)
 
 
 if __name__ == '__main__':
