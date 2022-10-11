@@ -8,12 +8,13 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.6.8"
 requests = "^2.26.0"
 lxml = "^4.8.0"
 dicttoxml = "^1.7.4"
 pyYAML = "^6.0"
 psycopg = "^3.0.16"
+rich = "^12.6.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

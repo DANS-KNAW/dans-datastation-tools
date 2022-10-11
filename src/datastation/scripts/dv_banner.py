@@ -3,6 +3,7 @@ import json
 import logging
 
 import requests
+from rich import print_json
 
 from datastation.config import init
 
@@ -15,7 +16,9 @@ def add_message(args, server_url, headers, unblock):
         "dismissibleByUser": "true",  # list does not return this value
         "messageTexts": [
             {
-                "lang": "en",  # when using other values, list returns an empty message
+                # when using another language, list returns an empty message
+                # when using multiple languages 'Accept-Language' does not seem to influence list_messages
+                "lang": "en",
                 "message": args.message
             }
         ]
@@ -25,21 +28,22 @@ def add_message(args, server_url, headers, unblock):
     response.raise_for_status()
 
 
-def remove_message(args, server_url, headers, unblock_query):
-    url = f'{server_url}/{args.id}?{unblock_query}'
-    logging.debug(f'{url} {headers}')
-    response = requests.delete(url, headers=headers)
-    print(response.content)
-    response.raise_for_status()
+def remove_message(args, server_url, headers, unblock):
+    for msg_id in args.ids:
+        url = f'{server_url}/{msg_id}?{unblock}'
+        logging.debug(f'{url} {headers}')
+        response = requests.delete(url, headers=headers)
+        print(response.content)
+        response.raise_for_status()
 
 
-def list_messages(args, server_url, headers, unblock_query):
+def list_messages(args, server_url, headers, unblock):
     headers['Content-type'] = 'application/json'  # side effect!
-    url = f'{server_url}?{unblock_query}'
+    url = f'{server_url}?{unblock}'
     logging.debug(f'{url} {headers}')
     response = requests.get(url, headers=headers)
-    print(json.dumps(response.json()["data"], indent=2))
     response.raise_for_status()
+    print(print_json(json.dumps(response.json()["data"], indent=4)))
 
 
 def main():
@@ -49,17 +53,20 @@ def main():
     subparsers = parser.add_subparsers()
 
     parser_add = subparsers.add_parser('add', help="Add a Banner Message")
+    # the required json suggest the commented options, but the values are not returned by list
+    # at first glance any message seems permanently dismissible
+    #
     # parser_add.add_argument('-l', '--lang', dest='lang', help="Language for the added message", default='en')
-    # the following optional boolean seems to conflict with a positional argument
     # parser_add.add_argument('-d', '--dismissible', dest='dismissible', default=False, type=bool,
     #                         help="False: a user can dismiss the message only for the duration of a session. "
     #                              "True: the message can be dismissed permanently. "
+    #                              "Any value causes 'True'. A value is required because of the positional argument."
     #                         )
-    parser_add.add_argument('message', help="Message to add as Banner")
+    parser_add.add_argument('message', help="Message to add as Banner, note that HTML can be included.")
     parser_add.set_defaults(func=add_message)
 
     parser_remove = subparsers.add_parser('remove', help="Remove a Banner Message by its id")
-    parser_remove.add_argument('id', help="id of the Banner Message")
+    parser_remove.add_argument('ids', help="one or more ids of the Banner Message", nargs='+')
     parser_remove.set_defaults(func=remove_message)
 
     parser_list = subparsers.add_parser('list', help="Get a list of active Banner Messages")
