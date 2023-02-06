@@ -22,7 +22,7 @@ def main():
     config = init()
     parser = argparse.ArgumentParser(description='Retrieves the json for the given field for a dataset')
     parser.add_argument('-p', '--pid', help='The pid of the dataset', required=True)
-    parser.add_argument('-m', '--metadata_block',
+    parser.add_argument('-m', '--metadata_block', required=True,
                         help='The metadata_block that holds the target field')
     parser.add_argument('-f', '--field', required=True, help='The target field')
     args = parser.parse_args()

@@ -7,14 +7,14 @@ from datastation.batch_processing import batch_process
 from datastation.config import init
 from datastation.ds_pidsfile import load_pids
 
-from datastation.dv_api import replace_dataset_metadatafield, get_dataset_metadata
+from datastation.dv_api import edit_dataset_metadatafield, get_dataset_metadata
 
 
 def replace_metadatafield(server_url, api_token, pid, updated_field):
     logging.debug("{}: Try updating it with: {}".format(pid, updated_field['value']))
     updated_fields = {'fields': [updated_field]}
     logging.debug(json.dumps(updated_fields))
-    replace_dataset_metadatafield(server_url, api_token, pid, updated_fields)
+    edit_dataset_metadatafield(server_url, api_token, pid, updated_fields, replace=True)
     return True
 
 
@@ -40,12 +40,14 @@ def replace_metadata_field_value(server_url, api_token, pid, field_name, field_f
             # expecting (assuming) one and only one instance,
             # but the code will try to change all it can find
             if field['typeName'] == replace_field:
-                logging.debug("{}: Found {} with value {} ".format(pid, field['typeName'],  field['value']))
-                if not field['typeClass'] == 'primitive':
-                    sys.exit("field {} does not have typeClass=`primitive` but {}".format(replace_field, field['typeClass']))
+                logging.debug("{}: Found {} with value {}, multiple is {} "
+                              .format(pid, field['typeName'],  field['value'], field['multiple']))
+                if not (field['typeClass'] == 'primitive' or field['typeClass'] == 'controlledVocabulary'):
+                    sys.exit("field {} does not have typeClass=`primitive` but {}"
+                             .format(replace_field, field['typeClass']))
                 # be safe and mutate a copy
                 updated_field = field.copy()
-                if field['multiple'] == 'true':
+                if field['multiple']:
                     try:
                         index_replace_from = field['value'].index(replace_from)
                         found_replace_from = True

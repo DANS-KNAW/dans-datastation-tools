@@ -1,7 +1,5 @@
 import json
-
 import requests
-
 from lxml import etree
 
 
@@ -81,11 +79,12 @@ def get_dataset_metadata(server_url, api_token, pid):
 
 
 # note that the dataset will become a draft if it was not already
-def replace_dataset_metadatafield(server_url, api_token, pid, field):
+def edit_dataset_metadatafield(server_url, api_token, pid, field, replace=False):
+    replace_arg = '&replace=true' if replace else ''
     headers = {'X-Dataverse-key': api_token}
     try:
         dv_resp = requests.put(
-            server_url + '/api/datasets/:persistentId/editMetadata?persistentId=' + pid + '&replace=true',
+            server_url + '/api/datasets/:persistentId/editMetadata?persistentId=' + pid + replace_arg,
             data=json.dumps(field, ensure_ascii=False),
             headers=headers)
         dv_resp.raise_for_status()
@@ -94,6 +93,7 @@ def replace_dataset_metadatafield(server_url, api_token, pid, field):
         raise
     resp_data = dv_resp.json()['data']
     return resp_data
+
 
 def get_dataset_roleassigments(server_url, api_token, pid):
     headers = {'X-Dataverse-key': api_token}
