@@ -34,6 +34,11 @@ dans_bag_validator:
   service_baseurl: 'http://localhost:20330'
   default_information_package_type: MIGRATION
 
+manage_deposit:
+  service_baseurl: 'http://localhost:20347'
+  delete_request: 'http://localhost:20347/delete-deposit'
+  report_request: 'http://localhost:20347/report'
+
 logging:
   version: 1
   root:
