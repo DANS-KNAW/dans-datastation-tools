@@ -1,7 +1,7 @@
 import argparse
 import logging
 from datastation.dv_api import DataverseAPI
-from datastation.config import init
+from datastation.common.config import init
 from typing import Optional, List
 import time
 import requests

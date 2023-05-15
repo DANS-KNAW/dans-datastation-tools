@@ -5,8 +5,8 @@ import json
 import logging
 import re
 
-from datastation.batch_processing import batch_process
-from datastation.config import init
+from datastation.common.batch_processing import batch_process
+from datastation.common.config import init
 from datastation.dv_api import publish_dataset, get_dataset_metadata, change_access_request, replace_dataset_metadata, \
     change_file_restrict
 
