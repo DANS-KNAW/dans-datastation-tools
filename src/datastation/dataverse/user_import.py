@@ -4,8 +4,8 @@ from datastation.dataverse.builtin_users import User
 from datastation.dataverse.dataverse_client import DataverseClient
 
 
-def update_password(database, user, dry_run=False):
-    update_statement = f"UPDATE builtinuser SET encryptedpassword = '{user.encrypted_password}' WHERE username = '{user.username}';"
+def update_password(database, user, encryption_version=1, dry_run=False):
+    update_statement = f"UPDATE builtinuser SET encryptedpassword = '{user.encrypted_password}', passwordencryptionversion = {encryption_version} WHERE username = '{user.username}';"
     if dry_run:
         print(f"dry-run, not updating database with {update_statement}")
     else:
@@ -36,7 +36,7 @@ class UserImport:
         if r is None:
             return
         if r.status_code == 200:
-            update_password(database, user, dry_run)
+            update_password(database, user, 0 if self.is_easy_format else 1, dry_run)
             print(f"Imported user {user.username}")
         else:
             print(f"Error creating user {user}: {r.status_code} {r.json()['message']}")
