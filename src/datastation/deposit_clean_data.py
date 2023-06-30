@@ -1,14 +1,12 @@
 import argparse
-import requests
-from managedeposit.compose_curl_request import ComposeCurlRequest
-
+from managedeposit.manage_deposit import ManageDeposit
 from datastation.common.config import init
 
 
 def clean_manage_deposit_data(server_url, args):
-    curl_request = ComposeCurlRequest(args)
-    response = requests.post(server_url + "?" + str(curl_request.compose_filter_params()))
-    print(response.text)
+    result = ManageDeposit(args).clean_data(server_url)
+    if result is not None:
+        print(result)
 
 
 def main():
@@ -20,9 +18,7 @@ def main():
     parser.add_argument('-u', '--user', dest='user', help='The depositor name')
     args = parser.parse_args()
 
-    print("input arguments: " + str(args))
-
-    server_url = config['manage_deposit']['delete_request']
+    server_url = config['manage_deposit']['service_baseurl'] + '/delete-deposit'
 
     clean_manage_deposit_data(server_url, args)
 

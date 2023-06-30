@@ -39,9 +39,7 @@ reingest_files:
   poll_interval_seconds: 2
 
 manage_deposit:
-  service_baseurl: 'http://localhost:20347'
-  delete_request: 'http://localhost:20347/delete-deposit'
-  report_request: 'http://localhost:20347/report'
+  service_baseurl: 'http://localhost:20356'
 
 logging:
   version: 1

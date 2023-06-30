@@ -1,35 +1,37 @@
 import argparse
-import requests
-import os
-from managedeposit.compose_curl_request import ComposeCurlRequest
-
+from managedeposit.manage_deposit import ManageDeposit
 from datastation.common.config import init
+from datastation.common.send_mail import SendMail
 
 
-def collect_deposits_data(server_url, args):
-    curl_request = ComposeCurlRequest(args)
-    # print(server_url + "?" + str(curl_request.compose_filter_params()) + ", headers=" + str(curl_request.compose_headers()))
-    response = requests.get(server_url + "?" + str(curl_request.compose_filter_params()),
-                            headers=curl_request.compose_headers())
+class ReportHandler:
+    def __init__(self, server_url, cmd_args):
+        self.__server_url = server_url
+        self.__command_line_args = cmd_args
 
-    # print(response.text)
-    report = response.text
-    if args.file_format == 'text/csv':
-        index_end_title_line = report.find('\n')
-        if index_end_title_line > 0:
-            report = report.replace(report[0:index_end_title_line], report[0:index_end_title_line].upper(), 1)
+    def handle_request(self):
+        report = ManageDeposit(self.__command_line_args).create_report(self.__server_url)
 
-    if args.output_file is not None:
-        with open(args.output_file, 'w') as output:
+        if report is not None:
+            output_file = self.__command_line_args.output_file
+            if output_file == '-':
+                print(report)
+            else:
+                self.save_report_to_file(report, output_file)
+
+                email_to = self.__command_line_args.email_to
+                if email_to is not None:
+                    self.send_report_mail(email_to, output_file)
+
+    def save_report_to_file(self, report, output_file):
+        with open(output_file, 'w') as output:
             output.write(report)
 
-
-def send_report(to_email, subject, message_body, attachment):
-    email_template = " -s '{0}' {1}<<EOF {2} \nEOF"
-    if attachment is not None:
-        os.system("mail" + " -a " + attachment + email_template.format(subject, to_email, message_body))
-    else:
-        os.system("mail" + email_template.format(subject, to_email, message_body))
+    def send_report_mail(self, mail_to, attachment):
+        SendMail.send(mail_to,
+                      "Deposits report",
+                      "Please, find attached the detailed report of deposits.",
+                      attachment)
 
 
 def main():
@@ -43,18 +45,12 @@ def main():
     parser.add_argument('-t', '--state', help='The state of the deposit')
     parser.add_argument('-u', '--user', dest='user', help='The depositor name')
     parser.add_argument('-f', '--format', dest='file_format', default='text/csv', help='Output data format')
-    parser.add_argument('--email-from', dest='email_from', help='')
     parser.add_argument('--email-to', dest='email_to', help='')
-    parser.add_argument('--email-bcc', dest='email_bcc', help='')
-    parser.add_argument('-d', '--datamanager', dest='datamanager', help='')
     args = parser.parse_args()
 
-    print("input arguments: " + str(args))
+    server_url = config['manage_deposit']['service_baseurl'] + '/report'
 
-    server_url = config['manage_deposit']['report_request']
-
-    collect_deposits_data(server_url, args)
-    send_report(args.email_to, "Deposits report", " ", args.output_file)
+    ReportHandler(server_url, args).handle_request()
 
 
 if __name__ == '__main__':
