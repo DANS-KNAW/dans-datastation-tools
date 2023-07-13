@@ -1,5 +1,5 @@
 import argparse
-from managedeposit.manage_deposit import ManageDeposit
+from datastation.managedeposit.manage_deposit import ManageDeposit
 from datastation.common.config import init
 from datastation.common.send_mail import SendMail
 
@@ -40,8 +40,8 @@ def main():
                                      description='Create and send reports based on dd-manage-deposit database')
     parser.add_argument('-o', '--output-file', dest='output_file', default='-',
                         help='the file to write the output to or - for stdout')
-    parser.add_argument('-e', '--enddate', dest='end_date', help='Filter until the record creation of this date')
-    parser.add_argument('-s', '--startdate', dest='start_date', help='Filter from the record creation of this date')
+    parser.add_argument('-e', '--enddate', dest='enddate', help='Filter until the record creation of this date')
+    parser.add_argument('-s', '--startdate', dest='startdate', help='Filter from the record creation of this date')
     parser.add_argument('-t', '--state', help='The state of the deposit')
     parser.add_argument('-u', '--user', dest='user', help='The depositor name')
     parser.add_argument('-f', '--format', dest='file_format', default='text/csv', help='Output data format')

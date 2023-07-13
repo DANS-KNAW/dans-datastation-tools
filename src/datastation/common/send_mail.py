@@ -3,7 +3,6 @@ import os
 # https://docs.python.org/3/library/email.html#module-email
 # https://docs.python.org/3/library/email.examples.html
 
-
 class SendMail:
     # def __init__(self):
     #     pass

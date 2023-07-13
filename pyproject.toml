@@ -28,6 +28,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 dans-bag-validate = "datastation.dans_bag_validate:main"
+deposit-clean-data = "datastation.deposit_clean_data:main"
+deposit-create-report = "datastation.deposit_create_report:main"
 dv-banner = "datastation.dv_banner:main"
 dv-dataset-delete-draft = "datastation.dv_dataset_delete_draft:main"
 dv-dataset-destroy = "datastation.dv_dataset_destroy:main"

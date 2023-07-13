@@ -39,7 +39,7 @@ reingest_files:
   poll_interval_seconds: 2
 
 manage_deposit:
-  service_baseurl: 'http://localhost:20356'
+  service_baseurl: 'http://localhost:20355'
 
 logging:
   version: 1
