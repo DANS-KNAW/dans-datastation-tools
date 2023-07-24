@@ -1,8 +1,9 @@
 import argparse
-from typing import List, Optional
+from typing import Optional
 
+from datastation.common.batch_processing import BatchProcessor
 from datastation.common.config import init
-from datastation.common.utils import add_dry_run_arg
+from datastation.common.utils import add_batch_proccessor_args, add_dry_run_arg
 from datastation.dataverse.datasets import Datasets
 from datastation.dataverse.dataverse_client import DataverseClient
 
@@ -38,13 +39,20 @@ def main():
         required=False,
     )
 
+    add_batch_proccessor_args(parser, report=False)
     add_dry_run_arg(parser)
     args = parser.parse_args()
 
     dataverse_client = DataverseClient(config["dataverse"])
 
+    pids = [args.pid]
+    if args.pid is None:
+        pids = [record['global_id'] for record in (dataverse_client.dataverse().search(dry_run=args.dry_run))]
+
     datasets = Datasets(dataverse_client, dry_run=args.dry_run)
-    datasets.print_dataset_attributes(args.storage, args.user_with_role, args.pid)
+    batch_processor = BatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast)
+    batch_processor.process_pids(
+        pids, lambda pid: datasets.print_dataset_attributes(args.storage, args.user_with_role, pid))
 
 
 if __name__ == "__main__":

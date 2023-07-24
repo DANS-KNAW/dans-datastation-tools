@@ -1,8 +1,4 @@
 import json
-import logging
-import sys
-
-from datastation.common.result_writer import JsonResultWriter
 from datastation.dataverse.dataverse_client import DataverseClient
 
 
@@ -15,9 +11,7 @@ class Datasets:
         def process_dataset_attributes(
                 dataset: dict,
                 storage: bool,
-                role: str,
-                result_writer: JsonResultWriter = None,
-                is_first: bool = False
+                role: str
         ):
             # convert search result to dataset if needed
             if "global_id" in dataset:
@@ -53,36 +47,13 @@ class Datasets:
                         if user["_roleAlias"] == role
                     ]
 
-            if result_writer:
-                result_writer.write(attributes, is_first)
-            else:
-                print(json.dumps(attributes, indent=2))
+            print(json.dumps(attributes, skipkeys=True))
 
-        # a single dataset
-        if pid is not None:
-            dataset = self.dataverse_client.dataset(pid).get(dry_run=self.dry_run)
+        dataset = self.dataverse_client.dataset(pid).get(dry_run=self.dry_run)
 
-            if dataset:
-                process_dataset_attributes(dataset, storage, role)
-            else:
-                raise Exception("Dataset not found")
-
-            return
-
+        if dataset:
+            process_dataset_attributes(dataset, storage, role)
         else:
-            # all datasets
-            contents = self.dataverse_client.dataverse().search(dry_run=self.dry_run)
+            raise Exception("Dataset not found")
 
-            result_writer = JsonResultWriter(out_stream=sys.stdout)
-            first = True
-
-            try:
-                for result in contents:
-                    try:
-                        process_dataset_attributes(result, storage, role, result_writer, is_first=first)
-                        first = False
-                    except Exception as e:
-                        logging.error(f"Error processing dataset {result['global_id']}: {e}")
-                        continue
-            finally:
-                result_writer.close()
+        return
