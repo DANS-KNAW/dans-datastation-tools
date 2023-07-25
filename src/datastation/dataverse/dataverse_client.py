@@ -7,6 +7,8 @@ from datastation.dataverse.dataverse_api import DataverseApi
 from datastation.dataverse.dataverse_api import DataverseApi
 from datastation.dataverse.metrics_api import MetricsApi
 
+from src.datastation.dataverse.search_api import SearchApi
+
 
 class DataverseClient:
     """ A client for the Dataverse API. """
@@ -19,7 +21,10 @@ class DataverseClient:
         self.db_config = config['db']
 
     def banner(self):
-        return BannerApi(self.server_url, self.api_token, self.unblock_key)
+        return BannerApi(self.server_url, self.api_token)
+
+    def search_api(self):
+        return SearchApi(self.server_url, self.api_token)
 
     def dataset(self, pid):
         return DatasetApi(pid, self.server_url, self.api_token, self.unblock_key, self.safety_latch)

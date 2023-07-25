@@ -47,7 +47,7 @@ def main():
     dataverse_client = DataverseClient(config["dataverse"])
 
     if args.pid is None:
-        result = dataverse_client.dataverse().search(dry_run=args.dry_run)
+        result = dataverse_client.search_api().search(dry_run=args.dry_run)
         pids = [record['global_id'] for record in result]
     else:
         pids = [args.pid]
