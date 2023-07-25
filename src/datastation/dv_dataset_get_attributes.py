@@ -1,4 +1,5 @@
 import argparse
+import logging
 from typing import Optional
 
 from datastation.common.batch_processing import BatchProcessor
@@ -45,9 +46,11 @@ def main():
 
     dataverse_client = DataverseClient(config["dataverse"])
 
-    pids = [args.pid]
     if args.pid is None:
-        pids = [record['global_id'] for record in (dataverse_client.dataverse().search(dry_run=args.dry_run))]
+        result = dataverse_client.dataverse().search(dry_run=args.dry_run)
+        pids = [record['global_id'] for record in result]
+    else:
+        pids = [args.pid]
 
     datasets = Datasets(dataverse_client, dry_run=args.dry_run)
     batch_processor = BatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast)
