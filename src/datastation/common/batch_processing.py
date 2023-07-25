@@ -22,15 +22,19 @@ class BatchProcessor:
         self.fail_on_first_error = fail_on_first_error
 
     def process_pids(self, pids, callback):
-        num_pids = len(pids)
-        logging.info(f"Start batch processing on {num_pids} pids")
+        if type(pids) is list:
+            num_pids = len(pids)
+            logging.info(f"Start batch processing on {num_pids} pids")
+        else:
+            logging.info(f"Start batch processing on unknown numer of pids")
+            num_pids = -1
         i = 0
         for pid in pids:
             i += 1
             try:
                 logging.info(f"Processing {i} of {num_pids}: {pid}")
                 callback(pid)
-                if self.wait > 0 and i < num_pids:
+                if self.wait > 0 and (i < num_pids or num_pids == -1):
                     logging.debug(f"Waiting {self.wait} seconds before processing next pid")
                     time.sleep(self.wait)
             except Exception as e:

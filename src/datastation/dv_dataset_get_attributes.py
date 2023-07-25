@@ -48,7 +48,7 @@ def main():
 
     if args.pid is None:
         result = dataverse_client.search_api().search(dry_run=args.dry_run)
-        pids = [record['global_id'] for record in result]
+        pids = map(lambda rec: rec['global_id'], result)
     else:
         pids = [args.pid]
 

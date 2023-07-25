@@ -60,7 +60,7 @@ class SearchApi:
                 logging.debug(f"ITEM: {item}")
                 yield item
 
-            if len(items) < per_page or rows != 0:
+            if len(items) < per_page and rows != 0:
                 break
 
             start += per_page
