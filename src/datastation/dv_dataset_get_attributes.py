@@ -9,11 +9,6 @@ from datastation.dataverse.datasets import Datasets
 from datastation.dataverse.dataverse_client import DataverseClient
 
 
-class AttributeOptions:
-    user_role: Optional[str] = None
-    storage: bool = False
-
-
 def main():
     config = init()
     parser = argparse.ArgumentParser(description="Retrieves attributes of a dataset")
