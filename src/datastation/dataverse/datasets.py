@@ -1,7 +1,7 @@
 import json
 import logging
 
-from src.datastation.dataverse.dataverse_client import DataverseClient
+from datastation.dataverse.dataverse_client import DataverseClient
 
 
 class Datasets:

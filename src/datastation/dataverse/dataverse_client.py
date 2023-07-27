@@ -1,11 +1,11 @@
-from src.datastation.common.database import Database
-from src.datastation.dataverse.banner_api import BannerApi
-from src.datastation.dataverse.builtin_users import BuiltInUsersApi
-from src.datastation.dataverse.dataset_api import DatasetApi
-from src.datastation.dataverse.dataverse_api import DataverseApi
-from src.datastation.dataverse.file_api import FileApi
-from src.datastation.dataverse.metrics_api import MetricsApi
-from src.datastation.dataverse.search_api import SearchApi
+from datastation.common.database import Database
+from datastation.dataverse.banner_api import BannerApi
+from datastation.dataverse.builtin_users import BuiltInUsersApi
+from datastation.dataverse.dataset_api import DatasetApi
+from datastation.dataverse.dataverse_api import DataverseApi
+from datastation.dataverse.file_api import FileApi
+from datastation.dataverse.metrics_api import MetricsApi
+from datastation.dataverse.search_api import SearchApi
 
 
 class DataverseClient:

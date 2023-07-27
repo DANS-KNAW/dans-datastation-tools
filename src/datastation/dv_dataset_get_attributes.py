@@ -2,11 +2,11 @@ import argparse
 import logging
 from typing import Optional
 
-from src.datastation.common.batch_processing import get_pids, BatchProcessor
-from src.datastation.common.config import init
-from src.datastation.common.utils import add_batch_proccessor_args, add_dry_run_arg
-from src.datastation.dataverse.datasets import Datasets
-from src.datastation.dataverse.dataverse_client import DataverseClient
+from datastation.common.batch_processing import get_pids, BatchProcessor
+from datastation.common.config import init
+from datastation.common.utils import add_batch_proccessor_args, add_dry_run_arg
+from datastation.dataverse.datasets import Datasets
+from datastation.dataverse.dataverse_client import DataverseClient
 
 
 class AttributeOptions:
