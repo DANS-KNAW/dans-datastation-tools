@@ -7,6 +7,10 @@ from datastation.dataverse.dataverse_client import DataverseClient
 
 class Datasets:
 
+    def __init__(self, dataverse_client: DataverseClient, dry_run: bool = False):
+        self.dataverse_client = dataverse_client
+        self.dry_run = dry_run
+
     @staticmethod
     def add_attribute_args(parser):
         parser.add_argument(
@@ -20,10 +24,6 @@ class Datasets:
             action="store_true",
             help="The storage in bytes",
         )
-
-    def __init__(self, dataverse_client: DataverseClient, dry_run: bool = False):
-        self.dataverse_client = dataverse_client
-        self.dry_run = dry_run
 
     def print_dataset_attributes(self, args, pid: str):
         logging.debug(f"pid={pid}")
