@@ -48,6 +48,7 @@ def main():
 
     if args.pid is None:
         result = dataverse_client.search_api().search(dry_run=args.dry_run)
+        # iterators makes the search reads part of the batch process:
         pids = map(lambda rec: rec['global_id'], result)
     else:
         pids = [args.pid]

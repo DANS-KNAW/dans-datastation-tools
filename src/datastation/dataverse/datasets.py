@@ -16,20 +16,17 @@ class Datasets:
         dataset_api = self.dataverse_client.dataset(pid)
         if storage:
             dataset = dataset_api.get(dry_run=self.dry_run)
-            if dataset:
-                attributes["storage"] = sum(
-                    f["dataFile"]["filesize"] for f in dataset["files"]
-                )
+            attributes["storage"] = sum(
+                f["dataFile"]["filesize"] for f in dataset["files"]
+            )
 
         if role is not None:
             role_assignments = dataset_api.get_role_assignments(dry_run=self.dry_run)
-
-            if role_assignments is not None:
-                attributes["users"] = [
-                    user["assignee"].replace("@", "")
-                    for user in role_assignments
-                    if user["_roleAlias"] == role
-                ]
+            attributes["users"] = [
+                user["assignee"].replace("@", "")
+                for user in role_assignments
+                if user["_roleAlias"] == role
+            ]
 
         print(json.dumps(attributes, skipkeys=True))
         return
