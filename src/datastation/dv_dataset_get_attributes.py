@@ -1,6 +1,5 @@
 import argparse
 import logging
-from typing import Optional
 
 from datastation.common.batch_processing import get_pids, BatchProcessor
 from datastation.common.config import init
