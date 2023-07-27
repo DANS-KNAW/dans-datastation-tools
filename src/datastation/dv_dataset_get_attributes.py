@@ -12,17 +12,7 @@ def main():
     config = init()
     parser = argparse.ArgumentParser(description="Retrieves attributes of a dataset")
 
-    parser.add_argument(
-        "--user-with-role",
-        dest="user_with_role",
-        help="List users with a specific role on the dataset",
-    )
-    parser.add_argument(
-        "--storage",
-        dest="storage",
-        action="store_true",
-        help="The storage in bytes",
-    )
+    Datasets.add_attribute_args(parser)
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('pid_or_pids_file', help="The dataset pid, or a file with a list of pids", nargs="?")
@@ -51,8 +41,7 @@ def main():
 
     datasets = Datasets(dataverse_client, dry_run=args.dry_run)
     batch_processor = BatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast)
-    batch_processor.process_pids(
-        pids, lambda pid: datasets.print_dataset_attributes(args.storage, args.user_with_role, pid))
+    batch_processor.process_pids(pids, lambda pid: datasets.print_dataset_attributes(args, pid))
 
 
 if __name__ == "__main__":
