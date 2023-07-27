@@ -1,7 +1,7 @@
 import requests
 
 
-from datastation.common.utils import print_dry_run_message
+from src.datastation.common.utils import print_dry_run_message
 
 
 class DataverseApi:

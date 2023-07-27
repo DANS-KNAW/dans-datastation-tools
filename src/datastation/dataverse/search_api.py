@@ -25,8 +25,12 @@ class SearchApi:
         :param dry_run: Do not perform the action, but show what would be done.
         :param start: The cursor (zero based result index) indicating where the result page starts
         :param rows: The number of results returned in the 'page'
-                     if zero reading of 25 rows at a time is repeated until no more rows are found
-        :return: The 'paged' search results in a list of dictionaries
+                     if zero: 25 rows at a time are read until no more rows are found
+        :return: The search results in a list of dictionaries.
+                 Make sure the result is not transformed to an array before feeding it to a batch processor,
+                 otherwise all pages are read before processing starts. In other words:
+                 don't: [record['global_id'] for record in dataverse_client.search_api().search()]
+                 but: map(lambda rec: rec['global_id'], dataverse_client.search_api().search())
         """
 
         if rows == 0:
@@ -60,7 +64,7 @@ class SearchApi:
                 logging.debug(f"ITEM: {item}")
                 yield item
 
-            if len(items) < per_page and rows != 0:
+            if len(items) < per_page or rows != 0:
                 break
 
             start += per_page

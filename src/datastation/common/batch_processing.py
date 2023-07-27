@@ -2,7 +2,7 @@ import logging
 import os
 import time
 
-from datastation.common.csv import CsvReport
+from src.datastation.common.csv import CsvReport
 
 
 def get_pids(pid_or_file):
@@ -32,11 +32,11 @@ class BatchProcessor:
         for pid in pids:
             i += 1
             try:
-                logging.info(f"Processing {i} of {num_pids}: {pid}")
-                callback(pid)
-                if self.wait > 0 and (i < num_pids or num_pids == -1):
+                if self.wait > 0 and i > 1:
                     logging.debug(f"Waiting {self.wait} seconds before processing next pid")
                     time.sleep(self.wait)
+                logging.info(f"Processing {i} of {num_pids}: {pid}")
+                callback(pid)
             except Exception as e:
                 logging.exception("Exception occurred", exc_info=True)
                 if self.fail_on_first_error:
