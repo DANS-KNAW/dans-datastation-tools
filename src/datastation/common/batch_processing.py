@@ -5,15 +5,33 @@ import time
 from datastation.common.csv import CsvReport
 
 
-def get_pids(pid_or_file):
-    if os.path.isfile(os.path.expanduser(pid_or_file)):
+def get_pids(pid_or_pids_file, search_api=None, query="*", subtree="root", object_type="dataset", dry_run=False):
+    """
+
+    Args:
+        pid_or_pids_file: The dataset pid, or a file with a list of pids.
+        search_api:       must be provided if pid_or_pids_file is None
+        query:            passed on to search_api().search
+        object_type:      passed on to search_api().search
+        subtree (object): passed on to search_api().search
+        dry_run:          Do not perform the action, but show what would be done.
+                          Only applicable if pid_or_pids_file is None.
+
+    Returns: an iterator with pids,
+             if pid_or_pids_file is not provided, it searches for all datasets
+             and extracts their pids, fetching the result pages lazy.
+    """
+    if pid_or_pids_file is None:
+        result = search_api.search(query=query, subtree=subtree, object_type=object_type, dry_run=dry_run)
+        return map(lambda rec: rec['global_id'], result)
+    elif os.path.isfile(os.path.expanduser(pid_or_pids_file)):
         pids = []
-        with open(os.path.expanduser(pid_or_file)) as f:
+        with open(os.path.expanduser(pid_or_pids_file)) as f:
             for line in f:
                 pids.append(line.strip())
         return pids
     else:
-        return [pid_or_file]
+        return [pid_or_pids_file]
 
 
 class BatchProcessor:

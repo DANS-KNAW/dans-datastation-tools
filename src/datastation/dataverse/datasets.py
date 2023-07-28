@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Optional
 
 from datastation.dataverse.dataverse_client import DataverseClient
 
