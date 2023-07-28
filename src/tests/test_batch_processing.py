@@ -1,7 +1,8 @@
+import os
 import time
 from datetime import datetime
 
-from datastation.common.batch_processing import BatchProcessor
+from datastation.common.batch_processing import BatchProcessor, get_pids
 
 
 class TestBatchProcessor:
@@ -47,3 +48,15 @@ class TestBatchProcessor:
         # this illustrates the "don't" of search_api.search.return
         assert captured.out == "lazy-1\nlazy-2\nlazy-3\n1\n2\n3\n"
         assert (end_time - start_time).total_seconds() >= 0.2
+
+    def test_get_single_pid(self):
+        pids = get_pids('doi:10.5072/DAR/ATALUT')
+        assert pids == ['doi:10.5072/DAR/ATALUT']
+
+    def test_get_pids_from_file(self, tmp_path):
+        with open(os.path.join(tmp_path, 'pids.txt'), 'w') as f:
+            f.write('doi:10.5072/DAR/ATALUT\ndoi:10.17026/dans-xfg-s8q3\n')
+            f.flush()
+            f.close()
+            pids = get_pids(f.name)
+            assert pids == ['doi:10.5072/DAR/ATALUT','doi:10.17026/dans-xfg-s8q3']
