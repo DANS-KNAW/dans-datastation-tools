@@ -1,4 +1,5 @@
 import argparse
+import json
 
 from datastation.common.batch_processing import get_pids, BatchProcessor
 from datastation.common.config import init
@@ -30,9 +31,9 @@ def main():
     dataverse_client = DataverseClient(config["dataverse"])
 
     datasets = Datasets(dataverse_client, dry_run=args.dry_run)
-    batch_processor = BatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast)
-    batch_processor.process_pids(get_pids(args.pid_or_pids_file, dataverse_client.search_api(), dry_run=args.dry_run),
-                                 lambda pid: datasets.print_dataset_attributes(args, pid))
+    BatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast).process_pids(
+        get_pids(args.pid_or_pids_file, dataverse_client.search_api(), dry_run=args.dry_run),
+        lambda pid: print(json.dumps(datasets.get_dataset_attributes(args, pid), skipkeys=True)))
 
 
 if __name__ == "__main__":

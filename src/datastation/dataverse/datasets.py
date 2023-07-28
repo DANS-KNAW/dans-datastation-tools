@@ -24,7 +24,7 @@ class Datasets:
             help="The storage in bytes",
         )
 
-    def print_dataset_attributes(self, args, pid: str):
+    def get_dataset_attributes(self, args, pid: str):
         logging.debug(f"pid={pid}")
         attributes = {"pid": pid}
 
@@ -43,5 +43,4 @@ class Datasets:
                 if user["_roleAlias"] == args.user_with_role
             ]
 
-        print(json.dumps(attributes, skipkeys=True))
-        return
+        return attributes
