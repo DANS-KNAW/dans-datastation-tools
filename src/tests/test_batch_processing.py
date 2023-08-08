@@ -56,7 +56,6 @@ class TestBatchProcessor:
     def test_get_pids_from_file(self, tmp_path):
         with open(os.path.join(tmp_path, 'pids.txt'), 'w') as f:
             f.write('doi:10.5072/DAR/ATALUT\ndoi:10.17026/dans-xfg-s8q3\n')
-            f.flush()
             f.close()
             pids = get_pids(f.name)
             assert pids == ['doi:10.5072/DAR/ATALUT','doi:10.17026/dans-xfg-s8q3']

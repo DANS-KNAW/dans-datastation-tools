@@ -12,7 +12,7 @@ def main():
     config = init()
     parser = argparse.ArgumentParser(description="Retrieves attributes of a dataset")
 
-    Datasets.add_attribute_args(parser)
+    Datasets.add_commandline_args_for_attributes(parser)
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('pid_or_pids_file', help="The dataset pid, or a file with a list of pids", nargs="?")

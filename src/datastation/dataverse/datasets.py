@@ -11,7 +11,7 @@ class Datasets:
         self.dry_run = dry_run
 
     @staticmethod
-    def add_attribute_args(parser):
+    def add_commandline_args_for_attributes(parser):
         parser.add_argument(
             "--user-with-role",
             dest="user_with_role",

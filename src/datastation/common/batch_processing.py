@@ -44,7 +44,7 @@ class BatchProcessor:
             num_pids = len(pids)
             logging.info(f"Start batch processing on {num_pids} pids")
         else:
-            logging.info(f"Start batch processing on unknown numer of pids")
+            logging.info(f"Start batch processing on unknown number of pids")
             num_pids = -1
         i = 0
         for pid in pids:
