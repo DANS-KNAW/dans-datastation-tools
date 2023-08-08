@@ -12,9 +12,10 @@ def main():
     config = init()
     parser = argparse.ArgumentParser(description="Retrieves attributes of a dataset")
 
-    parser.add_argument("--user-with-role", dest="user_with_role",
+    attr_group = parser.add_argument_group()
+    attr_group.add_argument("--user-with-role", dest="user_with_role",
                         help="List users with a specific role on the dataset",)
-    parser.add_argument("--storage", dest="storage", action="store_true",
+    attr_group.add_argument("--storage", dest="storage", action="store_true",
                         help="The storage in bytes",)
 
     group = parser.add_mutually_exclusive_group(required=True)
@@ -33,6 +34,8 @@ def main():
         'storage': args.storage,
         'user_with_role': args.user_with_role
     }
+    if set(attribute_options.values()) == {None, False}:
+        parser.error(f"Add at least one of the arguments: {', '.join(attribute_options.keys())}")
 
     dataverse_client = DataverseClient(config["dataverse"])
 
