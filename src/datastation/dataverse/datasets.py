@@ -1,4 +1,3 @@
-import json
 import logging
 
 from datastation.dataverse.dataverse_client import DataverseClient
@@ -10,37 +9,23 @@ class Datasets:
         self.dataverse_client = dataverse_client
         self.dry_run = dry_run
 
-    @staticmethod
-    def add_commandline_args_for_attributes(parser):
-        parser.add_argument(
-            "--user-with-role",
-            dest="user_with_role",
-            help="List users with a specific role on the dataset",
-        )
-        parser.add_argument(
-            "--storage",
-            dest="storage",
-            action="store_true",
-            help="The storage in bytes",
-        )
-
-    def get_dataset_attributes(self, args, pid: str):
+    def get_dataset_attributes(self, pid: str,  storage: bool = False, user_with_role: str = None):
         logging.debug(f"pid={pid}")
         attributes = {"pid": pid}
 
         dataset_api = self.dataverse_client.dataset(pid)
-        if args.storage:
+        if storage:
             dataset = dataset_api.get(dry_run=self.dry_run)
             attributes["storage"] = sum(
                 f["dataFile"]["filesize"] for f in dataset["files"]
             )
 
-        if args.user_with_role is not None:
+        if user_with_role is not None:
             role_assignments = dataset_api.get_role_assignments(dry_run=self.dry_run)
             attributes["users"] = [
                 user["assignee"].replace("@", "")
                 for user in role_assignments
-                if user["_roleAlias"] == args.user_with_role
+                if user["_roleAlias"] == user_with_role
             ]
 
         return attributes
