@@ -2,7 +2,7 @@ import argparse
 
 from datastation.common.batch_processing import get_pids, BatchProcessorWithReport
 from datastation.common.config import init
-from datastation.common.utils import add_batch_proccessor_args, add_dry_run_arg
+from datastation.common.utils import add_batch_processor_args, add_dry_run_arg
 from datastation.dataverse.dataverse_client import DataverseClient
 from datastation.dataverse.destroy_placeholder_dataset import destroy_placeholder_dataset
 
@@ -17,7 +17,7 @@ def main():
                     'the description of the dataset must match the pattern configured in '
                     'migration_placeholders.description_text_pattern. Note, that the safety latch must also be OFF.')
     parser.add_argument('pid_or_pids_file', help='The pid of the dataset to destroy, or a file with a list of pids')
-    add_batch_proccessor_args(parser)
+    add_batch_processor_args(parser)
     add_dry_run_arg(parser)
     args = parser.parse_args()
 

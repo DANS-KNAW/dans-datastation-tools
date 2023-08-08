@@ -6,7 +6,7 @@ from requests import HTTPError
 from datastation.common.batch_processing import get_pids, BatchProcessorWithReport
 from datastation.common.config import init
 from datastation.common.csv import CsvReport
-from datastation.common.utils import add_batch_proccessor_args, add_dry_run_arg
+from datastation.common.utils import add_batch_processor_args, add_dry_run_arg
 from datastation.dataverse.dataverse_client import DataverseClient
 
 
@@ -34,7 +34,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Updates the DataCite records for the PIDs in the input')
     parser.add_argument('pid_or_pids_file', help='PID or newline separated file with PIDs')
-    add_batch_proccessor_args(parser)
+    add_batch_processor_args(parser)
     add_dry_run_arg(parser)
 
     args = parser.parse_args()

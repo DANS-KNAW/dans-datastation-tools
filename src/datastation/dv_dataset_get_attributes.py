@@ -1,9 +1,9 @@
 import argparse
 import json
 
-from datastation.common.batch_processing import get_pids, BatchProcessor
+from datastation.common.batch_processing import get_pids, BatchProcessor, BatchProcessorWithReport
 from datastation.common.config import init
-from datastation.common.utils import add_batch_proccessor_args, add_dry_run_arg
+from datastation.common.utils import add_batch_processor_args, add_dry_run_arg
 from datastation.dataverse.datasets import Datasets
 from datastation.dataverse.dataverse_client import DataverseClient
 
@@ -25,14 +25,14 @@ def main():
     group.add_argument("--all", dest="all_datasets", action="store_true", required=False,
                        help="All datasets in the dataverse", )
 
-    add_batch_proccessor_args(parser, report=False)
+    add_batch_processor_args(parser, report=False)
     add_dry_run_arg(parser)
 
     args = parser.parse_args()
 
     attribute_options = {
         'storage': args.storage,
-        'user_with_role': args.user_with_role
+        'user_with_role': args.user_with_role,
     }
     if set(attribute_options.values()) == {None, False}:
         parser.error(f"Add at least one of the arguments: {', '.join(attribute_options.keys())}")

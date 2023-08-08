@@ -3,7 +3,7 @@ import os
 
 from datastation.common.batch_processing import BatchProcessor, get_pids
 from datastation.common.config import init
-from datastation.common.utils import add_batch_proccessor_args, add_dry_run_arg
+from datastation.common.utils import add_batch_processor_args, add_dry_run_arg
 from datastation.dataverse.dataverse_client import DataverseClient
 
 exporter_to_extension = {
@@ -49,7 +49,7 @@ def main():
                                                    "stored. If not provided, the files will be dumped to stdout. If "
                                                    "the directory does not exist, it will be created.",
                         dest='output_dir')
-    add_batch_proccessor_args(parser)
+    add_batch_processor_args(parser)
     add_dry_run_arg(parser)
 
     args = parser.parse_args()

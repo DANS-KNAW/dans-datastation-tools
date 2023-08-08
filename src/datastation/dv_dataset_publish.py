@@ -4,7 +4,7 @@ from datetime import datetime
 
 from datastation.common.batch_processing import BatchProcessorWithReport, get_pids
 from datastation.common.config import init
-from datastation.common.utils import add_batch_proccessor_args, add_dry_run_arg
+from datastation.common.utils import add_batch_processor_args, add_dry_run_arg
 from datastation.dataverse.dataverse_client import DataverseClient
 
 
@@ -47,7 +47,7 @@ def main():
     parser.add_argument('-u', '--update-type', dest='update_type',
                         help='whether to create a major, version or update the '
                              'current version (default: major)', choices=update_types, default='major')
-    add_batch_proccessor_args(parser)
+    add_batch_processor_args(parser)
     add_dry_run_arg(parser)
 
     args = parser.parse_args()

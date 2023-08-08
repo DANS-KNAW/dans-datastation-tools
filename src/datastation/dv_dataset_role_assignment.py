@@ -5,7 +5,7 @@ import rich
 
 from datastation.common.batch_processing import get_pids, BatchProcessorWithReport
 from datastation.common.config import init
-from datastation.common.utils import add_batch_proccessor_args, add_dry_run_arg
+from datastation.common.utils import add_batch_processor_args, add_dry_run_arg
 from datastation.dataverse.dataset_api import DatasetApi
 from datastation.dataverse.dataverse_client import DataverseClient
 
@@ -98,7 +98,7 @@ def main():
     parser_add.add_argument('role_assignment',
                             help='role assignee and alias (example: @dataverseAdmin=contributor) to add')
     parser_add.add_argument('pid_or_pid_file', help='the dataset pid or the input file with the dataset pids')
-    add_batch_proccessor_args(parser_add)
+    add_batch_processor_args(parser_add)
     add_dry_run_arg(parser_add)
 
     parser_add.set_defaults(func=lambda _: add_role_assignments(_, dataverse_client))
@@ -108,7 +108,7 @@ def main():
     parser_remove.add_argument('role-assignment',
                                help='role assignee and alias (example: @dataverseAdmin=contributor)')
     parser_remove.add_argument('pid_or_pid_file', help='The dataset pid or the input file with the dataset pids')
-    add_batch_proccessor_args(parser_remove)
+    add_batch_processor_args(parser_remove)
     add_dry_run_arg(parser_remove)
     parser_remove.set_defaults(func=lambda _: remove_role_assignments(_, dataverse_client))
 
