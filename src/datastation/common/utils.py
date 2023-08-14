@@ -9,7 +9,7 @@ def add_dry_run_arg(parser):
                         help='Do not perform the action, but show what would be done.')
 
 
-def add_batch_proccessor_args(parser, report: bool = True):
+def add_batch_processor_args(parser, report: bool = True):
     parser.add_argument('-w', '--wait-between-items', default=2.0, type=float,
                         help="number of seconds to wait between processing items",
                         dest='wait')
