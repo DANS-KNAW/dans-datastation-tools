@@ -53,7 +53,10 @@ class BatchProcessor:
                 if self.wait > 0 and i > 1:
                     logging.debug(f"Waiting {self.wait} seconds before processing next pid")
                     time.sleep(self.wait)
-                logging.info(f"Processing {i} of {num_pids}: {pid}")
+                if type(pid) is dict:
+                    logging.info(f"Processing {i} of {num_pids}: {pid['PID']}")
+                elif type(pid) is str:
+                    logging.info(f"Processing {i} of {num_pids}")
                 callback(pid)
             except Exception as e:
                 logging.exception("Exception occurred", exc_info=True)
