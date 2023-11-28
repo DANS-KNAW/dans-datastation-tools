@@ -39,25 +39,32 @@ class BatchProcessor:
         self.wait = wait
         self.fail_on_first_error = fail_on_first_error
 
-    def process_pids(self, pids, callback):
-        if type(pids) is list:
-            num_pids = len(pids)
+    def process_pids(self, pids_or_objects, callback):
+        """ pids_or_objects are passed to the callback one by one.
+
+        If an element of pids_or_objects is a string or a dictionary with key 'PID',
+        the value is used for progress logging.
+        """
+        if type(pids_or_objects) is list:
+            num_pids = len(pids_or_objects)
             logging.info(f"Start batch processing on {num_pids} pids")
         else:
             logging.info(f"Start batch processing on unknown number of pids")
             num_pids = -1
         i = 0
-        for pid in pids:
+        for obj in pids_or_objects:
             i += 1
             try:
                 if self.wait > 0 and i > 1:
                     logging.debug(f"Waiting {self.wait} seconds before processing next pid")
                     time.sleep(self.wait)
-                if type(pid) is dict:
-                    logging.info(f"Processing {i} of {num_pids}: {pid['PID']}")
-                elif type(pid) is str:
+                if type(obj) is dict:
+                    logging.info(f"Processing {i} of {num_pids}: {obj['PID']}")
+                elif type(obj) is str:
+                    logging.info(f"Processing {i} of {num_pids}: {obj}")
+                else:
                     logging.info(f"Processing {i} of {num_pids}")
-                callback(pid)
+                callback(obj)
             except Exception as e:
                 logging.exception("Exception occurred", exc_info=True)
                 if self.fail_on_first_error:
@@ -75,6 +82,6 @@ class BatchProcessorWithReport(BatchProcessor):
         self.report_file = report_file
         self.headers = headers
 
-    def process_pids(self, pids, callback):
+    def process_pids(self, pids_or_objects, callback):
         with CsvReport(os.path.expanduser(self.report_file), self.headers) as csv_report:
-            super().process_pids(pids, lambda pid: callback(pid, csv_report))
+            super().process_pids(pids_or_objects, lambda pid: callback(pid, csv_report))
