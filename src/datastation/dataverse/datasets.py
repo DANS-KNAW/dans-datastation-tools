@@ -13,9 +13,12 @@ class Datasets:
     def update_metadata(self, data: dict):
         logging.debug(data)
         all_fields = []
+        if '@' in ' '.join(data.keys()):
+            raise Exception("Compound fields not supported")
         for key in [key for key in data.keys() if key != 'PID' and not data[key].startswith('[')]:
             all_fields.append({'typeName': key, 'value': data[key]})
         for key in [key for key in data.keys() if key != 'PID' and data[key].startswith('[')]:
+            logging.debug('-------' + data[key] + '=======')
             all_fields.append({'typeName': key, 'value': json.loads(data[key])})
         logging.debug(all_fields)
         dataset_api = self.dataverse_client.dataset(data['PID'])
