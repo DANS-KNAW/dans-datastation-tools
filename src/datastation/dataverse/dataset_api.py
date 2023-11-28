@@ -33,6 +33,18 @@ class DatasetApi:
         resp_data = dv_resp.json()['data']
         return resp_data
 
+    def edit_metadata(self, data: dict, dry_run=False):
+        url = f'{self.server_url}/api/datasets/:persistentId/editMetadata'
+        params = {'persistentId': self.pid, 'replace': 'true'}
+        headers = {'X-Dataverse-key': self.api_token}
+        if dry_run:
+            print_dry_run_message(method='PUT', url=url, headers=headers, params=params, data=data)
+            return None
+        else:
+            r = requests.put(url, headers=headers, params=params, data=data)
+            r.raise_for_status()
+            return r
+
     def get_role_assignments(self, dry_run=False):
         url = f'{self.server_url}/api/datasets/:persistentId/assignments'
         params = {'persistentId': self.pid}
