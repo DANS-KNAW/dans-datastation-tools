@@ -11,15 +11,15 @@ class Datasets:
         self.dry_run = dry_run
 
     def update_metadata(self, data: dict):
+        logging.debug(data)
+        all_fields = []
+        for key in [key for key in data.keys() if key != 'PID' and not data[key].startswith('[')]:
+            all_fields.append({'typeName': key, 'value': data[key]})
+        for key in [key for key in data.keys() if key != 'PID' and data[key].startswith('[')]:
+            all_fields.append({'typeName': key, 'value': json.loads(data[key])})
+        logging.debug(all_fields)
         dataset_api = self.dataverse_client.dataset(data['PID'])
-        fields = []
-        for key in data.keys():
-            if key != 'PID':
-                if '@' in key:
-                    raise Exception('Compound fields not yet supported')
-                fields.append({'typeName': key, 'value': data[key]})
-        logging.debug(fields)
-        result = dataset_api.edit_metadata(data=(json.dumps({'fields': fields})), dry_run=self.dry_run)
+        result = dataset_api.edit_metadata(data=(json.dumps({'fields': all_fields})), dry_run=self.dry_run)
         logging.debug(result)
         return result
 

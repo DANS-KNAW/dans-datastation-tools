@@ -1,7 +1,6 @@
 import re
 from argparse import ArgumentParser
 from csv import DictReader
-from itertools import count
 from os.path import expanduser, isfile
 
 from datastation.common.batch_processing import BatchProcessor
@@ -44,7 +43,7 @@ def main():
             parser.error(f"No values specified" + suffix)
 
         pat = re.compile('([-a-zA-Z]+)?[-a-zA-Z]+')
-        for name in reader.fieldnames:
+        for name in fieldnames:
             if not pat.match(name):
                 parser.error(f"Invalid typeName {name}" + suffix)
 
