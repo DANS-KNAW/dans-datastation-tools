@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import time
 
 from datastation.common.csv import CsvReport
@@ -58,7 +59,7 @@ class BatchProcessor:
                 if self.wait > 0 and i > 1:
                     logging.debug(f"Waiting {self.wait} seconds before processing next pid")
                     time.sleep(self.wait)
-                if type(obj) is dict:
+                if type(obj) is dict and 'PID' in obj.keys():
                     logging.info(f"Processing {i} of {num_pids}: {obj['PID']}")
                 elif type(obj) is str:
                     logging.info(f"Processing {i} of {num_pids}: {obj}")
