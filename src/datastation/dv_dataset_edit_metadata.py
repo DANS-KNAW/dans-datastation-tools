@@ -27,7 +27,8 @@ def main():
                              "--value author@authorName='the name' "
                              "--value author@authorAffiliation='the organization'. "
                              "The quoting style for repetitive fields is <typeName>='[\"<value>\"]', "
-                             "for example: -v dansRightsHolder='[\"me\",\"O'\"'\"'Neill\"]'. "
+                             "for example: -v dansRightsHolder='[\"me\",\"O'\"'\"'Neill\"]', or in a CSV: "
+                             "'[\"me\",\"O''Neill\"]'. "
                              "Note that all occurrences of a repetitive field will be replaced. "
                              "")
     add_batch_processor_args(parser, report=False)
