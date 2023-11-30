@@ -11,15 +11,18 @@ class Datasets:
         self.dry_run = dry_run
 
     def update_metadata(self, data: dict):
+        if 'rest.column' in data.keys():
+            logging.error(data)
+            raise Exception("Quoting problem or too many values.")
         logging.debug(data)
-        all_fields = []
         if '@' in ' '.join(data.keys()):
             raise Exception("Compound fields not supported")
-        for key in [key for key in data.keys() if key != 'PID' and not data[key].startswith('[')]:
-            all_fields.append({'typeName': key, 'value': data[key]})
-        for key in [key for key in data.keys() if key != 'PID' and data[key].startswith('[')]:
-            logging.debug('-------' + data[key] + '=======')
-            all_fields.append({'typeName': key, 'value': json.loads(data[key])})
+        all_fields = []
+        for key in [key for key in data.keys() if key != 'PID' and data[key] is not None]:
+            if data[key].startswith('['):
+                all_fields.append({'typeName': key, 'value': (json.loads(data[key]))})
+            else:
+                all_fields.append({'typeName': key, 'value': data[key]})
         logging.debug(all_fields)
         dataset_api = self.dataverse_client.dataset(data['PID'])
         result = dataset_api.edit_metadata(data=(json.dumps({'fields': all_fields})), dry_run=self.dry_run)
