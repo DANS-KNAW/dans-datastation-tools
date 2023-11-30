@@ -15,8 +15,6 @@ class Datasets:
             logging.error(data)
             raise Exception("Quoting problem or too many values.")
         logging.debug(data)
-        if '@' in ' '.join(data.keys()):
-            raise Exception("Compound fields not supported")
         all_fields = []
         for key in [key for key in data.keys() if key != 'PID' and data[key] is not None]:
             if data[key].startswith('['):
@@ -26,7 +24,7 @@ class Datasets:
         logging.debug(all_fields)
         dataset_api = self.dataverse_client.dataset(data['PID'])
         result = dataset_api.edit_metadata(data=(json.dumps({'fields': all_fields})), dry_run=self.dry_run)
-        logging.debug(result)
+        logging.info(result)
         return result
 
     def get_dataset_attributes(self, pid: str,  storage: bool = False, user_with_role: str = None):

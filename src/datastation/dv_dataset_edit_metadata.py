@@ -67,6 +67,8 @@ def main():
         with open(args.pid_or_file, newline='') as csvfile:
             reader = DictReader(csvfile, quotechar="'", delimiter=',', quoting=csv.QUOTE_MINIMAL,
                                 skipinitialspace=True, restkey='rest.column', escapechar=None)
+            if '@' in ' '.join(reader.fieldnames):
+                raise Exception("Compound fields not supported")
             validate_fieldnames(reader.fieldnames)
             run(reader)
     else:
