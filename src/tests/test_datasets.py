@@ -80,7 +80,7 @@ class TestDatasets:
         # assert caplog.records[1].message == "[{'typeName': 'author', 'value': [{'authorName': 'me', " \
         #                                     "'authorAffiliation': 'my organization'}]}]"
 
-    def test_update_metadata_with_too_many_values(self, caplog, capsys):
+    def test_update_metadata_with_invalid_quotes_for_repetitive_fields(self, caplog, capsys):
         caplog.set_level('DEBUG')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
@@ -94,5 +94,21 @@ class TestDatasets:
         assert capsys.readouterr().out == ''
         assert len(caplog.records) == 1
         assert caplog.records[0].levelname == 'DEBUG'
-        assert caplog.records[0].message == "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': " \
-                                            '"[\'me\',\'you\']"}'
+        assert (caplog.records[0].message ==
+                "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': " '"[\'me\',\'you\']"}')
+
+    def test_update_metadata_with_too_many_values(self, caplog, capsys):
+        caplog.set_level('DEBUG')
+        client = DataverseClient(config=self.cfg)
+        datasets = Datasets(client, dry_run=True)
+        data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': 'me', 'rest.column': 'you'}
+        with pytest.raises(Exception) as e:
+            datasets.update_metadata(data)
+        assert str(e.value) == 'Quoting problem or too many values.'
+        assert capsys.readouterr().out == ''
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelname == 'ERROR'
+        assert (caplog.records[0].message ==
+                "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': 'me', 'rest.column': 'you'}")
+
+
