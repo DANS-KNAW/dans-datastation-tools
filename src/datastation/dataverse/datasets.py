@@ -19,6 +19,8 @@ class Datasets:
         for key in [key for key in data.keys() if key != 'PID' and data[key] is not None]:
             if data[key].startswith('['):
                 all_fields.append({'typeName': key, 'value': (json.loads(data[key]))})
+            elif '@' in key:
+                raise Exception("Subfields not yet supported.")
             else:
                 all_fields.append({'typeName': key, 'value': data[key]})
         logging.debug(all_fields)
