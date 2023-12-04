@@ -18,7 +18,7 @@ def main():
                         help="Replace existing metadata fields with the new metadata. ")
     parser.add_argument('pid_or_file',
                         help="Either a CSV file or the PID of the dataset to edit. "
-                             "One column column of the file MUST have title 'PID'. "
+                             "One column of the file MUST have title 'PID'. "
                              "The other columns MUST have a typeName, as for the --value argument.")
     parser.add_argument('-v', '--value', action='append',
                         help="At least once in combination with a PID, none in combination with a CSV file. "
