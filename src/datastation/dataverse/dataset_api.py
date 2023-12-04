@@ -33,9 +33,11 @@ class DatasetApi:
         resp_data = dv_resp.json()['data']
         return resp_data
 
-    def edit_metadata(self, data: dict, dry_run=False):
+    def edit_metadata(self, data: dict, dry_run=False, replace: bool = False):
         url = f'{self.server_url}/api/datasets/:persistentId/editMetadata'
-        params = {'persistentId': self.pid, 'replace': 'true'}
+        params = {'persistentId': self.pid}
+        if replace:
+            params['replace'] = 'true'
         headers = {'X-Dataverse-key': self.api_token}
         if dry_run:
             print_dry_run_message(method='PUT', url=url, headers=headers, params=params, data=data)

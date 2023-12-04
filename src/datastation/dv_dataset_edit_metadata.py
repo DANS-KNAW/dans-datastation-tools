@@ -14,12 +14,14 @@ from datastation.dataverse.dataverse_client import DataverseClient
 def main():
     config = init()
     parser = ArgumentParser(description='Edits one or more, potentially published, datasets. Requires an API token.')
+    parser.add_argument('-r', '--replace', dest="replace", action='store_true',
+                        help="Replace existing metadata fields with the new metadata. ")
     parser.add_argument('pid_or_file',
                         help="Either a CSV file or the PID of the dataset to edit. "
                              "One column column of the file MUST have title 'PID'. "
                              "The other columns MUST have a typeName, as for the --value argument.")
     parser.add_argument('-v', '--value', action='append',
-                        help="At least once in combination with a PID, not allowed in combination with CSV file. "
+                        help="At least once in combination with a PID, none in combination with a CSV file. "
                              "The new values for fields formatted as <typeName>=<value>. "
                              "for example: title='New title'. "
                              "A subfield in a compound field must be prefixed with "
@@ -29,7 +31,8 @@ def main():
                              "The quoting style for repetitive fields is <typeName>='[\"<value>\"]', "
                              "for example: -v dansRightsHolder='[\"me\",\"O'\"'\"'Neill\"]', or in a CSV: "
                              "'[\"me\",\"O''Neill\"]'. "
-                             "Note that all occurrences of a repetitive field will be replaced. "
+                             "Note that without 'replace' an existing value of a repetitive field is not duplicated. "
+                             "Not repetitive fields require the 'replace' option. "
                              "")
     add_batch_processor_args(parser, report=False)
     add_dry_run_arg(parser)
@@ -39,7 +42,7 @@ def main():
         client = DataverseClient(config['dataverse'])
         datasets = Datasets(client, dry_run=args.dry_run)
         batch_processor = BatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast)
-        batch_processor.process_pids(obj_list, lambda obj: datasets.update_metadata(obj))
+        batch_processor.process_pids(obj_list, lambda obj: datasets.update_metadata(data=obj, replace=args.replace))
 
     def validate_fieldnames(fieldnames, suffix=' in ' + args.pid_or_file):
         if 'PID' not in fieldnames:

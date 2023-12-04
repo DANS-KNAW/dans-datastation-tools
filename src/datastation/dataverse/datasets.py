@@ -10,7 +10,7 @@ class Datasets:
         self.dataverse_client = dataverse_client
         self.dry_run = dry_run
 
-    def update_metadata(self, data: dict):
+    def update_metadata(self, data: dict, replace: bool = False):
         if 'rest.column' in data.keys():
             logging.error(data)
             raise Exception("Quoting problem or too many values.")
@@ -25,7 +25,7 @@ class Datasets:
                 all_fields.append({'typeName': key, 'value': data[key]})
         logging.debug(all_fields)
         dataset_api = self.dataverse_client.dataset(data['PID'])
-        result = dataset_api.edit_metadata(data=(json.dumps({'fields': all_fields})), dry_run=self.dry_run)
+        result = dataset_api.edit_metadata(data=(json.dumps({'fields': all_fields})), replace=replace, dry_run=self.dry_run)
         logging.info(result)
         return result
 

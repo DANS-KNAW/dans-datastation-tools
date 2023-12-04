@@ -6,14 +6,14 @@ from datastation.dataverse.dataverse_client import DataverseClient
 
 class TestDatasets:
     url = 'https://demo.archaeology.datastations.nl'
-    cfg = {'server_url': url, 'api_token': 'xxx', 'safety_latch': False, 'db': {}}
+    cfg = {'server_url': url, 'api_token': 'xxx', 'safety_latch': 'ON', 'db': {}}
 
     def test_update_metadata(self, caplog, capsys):
         caplog.set_level('DEBUG')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
         data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title'}
-        datasets.update_metadata(data)
+        datasets.update_metadata(data, replace=True)
         assert capsys.readouterr().out == ('DRY-RUN: only printing command, not sending it...\n'
                                            f'PUT {self.url}/api/datasets/:persistentId/editMetadata\n'
                                            "headers: {'X-Dataverse-key': 'xxx'}\n"
@@ -34,22 +34,25 @@ class TestDatasets:
         assert caplog.records[2].funcName == 'update_metadata'
         assert caplog.records[2].levelname == 'INFO'
 
-    def test_update_metadata_with_repetitive_field(self, caplog, capsys):
+    def test_update_metadata_with_repetitive_field_without_replacing(self, caplog, capsys):
         caplog.set_level('DEBUG')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
-        data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'author': '["me","O\'Neill"]'}
+        data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'dansRightsHolder': '["me","O\'Neill"]'}
 
-        datasets.update_metadata(data)
-        assert capsys.readouterr().out == ('DRY-RUN: only printing command, not sending it...\n'
-                                           f'PUT {self.url}/api/datasets/:persistentId/editMetadata\n'
-                                           "headers: {'X-Dataverse-key': 'xxx'}\n"
-                                           "params: {'persistentId': 'doi:10.5072/FK2/8KQW3Y', 'replace': 'true'}\n"
-                                           'data: {"fields": [{"typeName": "author", "value": ["me", "O\'Neill"]}]}\n'
-                                           '\n')
+        datasets.update_metadata(data, replace=False)
+        assert (capsys.readouterr().out ==
+                ('DRY-RUN: only printing command, not sending it...\n'
+                 f'PUT {self.url}/api/datasets/:persistentId/editMetadata\n'
+                 "headers: {'X-Dataverse-key': 'xxx'}\n"
+                 "params: {'persistentId': 'doi:10.5072/FK2/8KQW3Y'}\n"
+                 'data: {"fields": [{"typeName": "dansRightsHolder", "value": ["me", "O\'Neill"]}]}\n'
+                 '\n'))
         assert len(caplog.records) == 3
-        assert caplog.records[0].message == "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'author': '[\"me\",\"O\\'Neill\"]'}"
-        assert caplog.records[1].message == '[{\'typeName\': \'author\', \'value\': [\'me\', "O\'Neill"]}]'
+        assert (caplog.records[0].message ==
+                "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'dansRightsHolder': '[\"me\",\"O\\'Neill\"]'}")
+        assert (caplog.records[1].message ==
+                '[{\'typeName\': \'dansRightsHolder\', \'value\': [\'me\', "O\'Neill"]}]')
 
     def test_update_metadata_with_subfield(self, caplog, capsys):
         caplog.set_level('DEBUG')
@@ -110,5 +113,3 @@ class TestDatasets:
         assert caplog.records[0].levelname == 'ERROR'
         assert (caplog.records[0].message ==
                 "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': 'me', 'rest.column': 'you'}")
-
-
