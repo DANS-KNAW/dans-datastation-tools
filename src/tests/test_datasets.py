@@ -9,7 +9,7 @@ class TestDatasets:
     cfg = {'server_url': url, 'api_token': 'xxx', 'safety_latch': 'ON', 'db': {}}
 
     def test_update_metadata(self, caplog, capsys):
-        caplog.set_level('DEBUG')
+        caplog.set_level('INFO')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
         data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title'}
@@ -20,22 +20,14 @@ class TestDatasets:
                                            "params: {'persistentId': 'doi:10.5072/FK2/8KQW3Y', 'replace': 'true'}\n"
                                            'data: {"fields": [{"typeName": "title", "value": "New title"}]}\n'
                                            '\n')
-        assert len(caplog.records) == 3
+        assert len(caplog.records) == 1
 
-        assert caplog.records[0].message == "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title'}"
+        assert caplog.records[0].message == 'None'  # without dryrun: <Response [200]>
         assert caplog.records[0].funcName == 'update_metadata'
-        assert caplog.records[0].levelname == 'DEBUG'
-
-        assert caplog.records[1].message == "[{'typeName': 'title', 'value': 'New title'}]"
-        assert caplog.records[1].funcName == 'update_metadata'
-        assert caplog.records[1].levelname == 'DEBUG'
-
-        assert caplog.records[2].message == 'None'  # without dryrun: <Response [200]>
-        assert caplog.records[2].funcName == 'update_metadata'
-        assert caplog.records[2].levelname == 'INFO'
+        assert caplog.records[0].levelname == 'INFO'
 
     def test_update_metadata_with_repetitive_field_without_replacing(self, caplog, capsys):
-        caplog.set_level('DEBUG')
+        caplog.set_level('INFO')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
         data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'dansRightsHolder': '["me","O\'Neill"]'}
@@ -48,23 +40,21 @@ class TestDatasets:
                  "params: {'persistentId': 'doi:10.5072/FK2/8KQW3Y'}\n"
                  'data: {"fields": [{"typeName": "dansRightsHolder", "value": ["me", "O\'Neill"]}]}\n'
                  '\n'))
-        assert len(caplog.records) == 3
-        assert (caplog.records[0].message ==
-                "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'dansRightsHolder': '[\"me\",\"O\\'Neill\"]'}")
-        assert (caplog.records[1].message ==
-                '[{\'typeName\': \'dansRightsHolder\', \'value\': [\'me\', "O\'Neill"]}]')
+        assert len(caplog.records) == 1
+        assert (caplog.records[0].message == 'None')
 
     def test_update_metadata_with_subfield(self, caplog, capsys):
-        caplog.set_level('DEBUG')
+        caplog.set_level('INFO')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
         data = {'PID': 'doi:10.5072/FK2/8KQW3Y',
-                'author@authorName': 'me',
-                'author@authorAffiliation': 'my organization'}
+                'author@authorName': '["me"]',
+                'author@authorAffiliation': '["my organization"]'}
 
         with pytest.raises(Exception) as e:
             datasets.update_metadata(data)
-        assert str(e.value) == 'Subfields not yet supported.'
+        assert str(e.value) == "Compound fields not yet supported: {'author': {'authorName': ['me'], "\
+                               "'authorAffiliation': ['my organization']}}"
 
         # test driven expectations below
 
@@ -77,11 +67,7 @@ class TestDatasets:
         #                                    '"authorAffiliation": "my organization"}]}]}\n'
         #                                    '\n')
 
-        assert len(caplog.records) == 1
-        assert caplog.records[0].message == "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'author@authorName': 'me', " \
-                                            "'author@authorAffiliation': 'my organization'}"
-        # assert caplog.records[1].message == "[{'typeName': 'author', 'value': [{'authorName': 'me', " \
-        #                                     "'authorAffiliation': 'my organization'}]}]"
+        assert len(caplog.records) == 0
 
     def test_update_metadata_with_invalid_quotes_for_repetitive_fields(self, caplog, capsys):
         caplog.set_level('DEBUG')
@@ -95,7 +81,7 @@ class TestDatasets:
         assert str(e.type) == "<class 'json.decoder.JSONDecodeError'>"
 
         assert capsys.readouterr().out == ''
-        assert len(caplog.records) == 1
+        assert len(caplog.records) == 2
         assert caplog.records[0].levelname == 'DEBUG'
         assert (caplog.records[0].message ==
                 "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': " '"[\'me\',\'you\']"}')
