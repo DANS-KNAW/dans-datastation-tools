@@ -48,26 +48,25 @@ class TestDatasets:
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
         data = {'PID': 'doi:10.5072/FK2/8KQW3Y',
-                'author@authorName': '["me"]',
-                'author@authorAffiliation': '["my organization"]'}
+                'author@authorName': '["me","you"]',
+                'author@authorAffiliation': '["mine","yours"]'}
 
-        with pytest.raises(Exception) as e:
-            datasets.update_metadata(data)
-        assert str(e.value) == "Compound fields not yet supported: {'author': {'authorName': ['me'], "\
-                               "'authorAffiliation': ['my organization']}}"
+        datasets.update_metadata(data)
 
-        # test driven expectations below
+        assert (capsys.readouterr().out ==
+                ('DRY-RUN: only printing command, not sending it...\n'
+                 f'PUT {self.url}/api/datasets/:persistentId/editMetadata\n'
+                 "headers: {'X-Dataverse-key': 'xxx'}\n"
+                 "params: {'persistentId': 'doi:10.5072/FK2/8KQW3Y'}\n"
+                 'data: {"fields": [{"typeName": "author", "value": ['
+                 '{"authorName": {"typeName": "authorName", "value": "me"}, '
+                 '"authorAffiliation": {"typeName": "authorAffiliation", "value": "mine"}}, '
+                 '{"authorName": {"typeName": "authorName", "value": "you"}, '
+                 '"authorAffiliation": {"typeName": "authorAffiliation", "value": "yours"}}'
+                 ']}]}\n\n'))
 
-        # datasets.update_metadata(data)
-        # assert capsys.readouterr().out == ('DRY-RUN: only printing command, not sending it...\n'
-        #                                    f'PUT {self.url}/api/datasets/:persistentId/editMetadata\n'
-        #                                    "headers: {'X-Dataverse-key': 'xxx'}\n"
-        #                                    "params: {'persistentId': 'doi:10.5072/FK2/8KQW3Y', 'replace': 'true'}\n"
-        #                                    'data: {"fields": [{"typeName": "author", "value": [{"authorName": "me", '
-        #                                    '"authorAffiliation": "my organization"}]}]}\n'
-        #                                    '\n')
-
-        assert len(caplog.records) == 0
+        assert len(caplog.records) == 1
+        assert caplog.records[0].message == 'None'
 
     def test_update_metadata_with_invalid_quotes_for_repetitive_fields(self, caplog, capsys):
         caplog.set_level('DEBUG')
@@ -81,7 +80,7 @@ class TestDatasets:
         assert str(e.type) == "<class 'json.decoder.JSONDecodeError'>"
 
         assert capsys.readouterr().out == ''
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
         assert caplog.records[0].levelname == 'DEBUG'
         assert (caplog.records[0].message ==
                 "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': " '"[\'me\',\'you\']"}')
