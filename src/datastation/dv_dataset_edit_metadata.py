@@ -15,25 +15,29 @@ def main():
     config = init()
     parser = ArgumentParser(description='Edits one or more, potentially published, datasets. Requires an API token.')
     parser.add_argument('-r', '--replace', dest="replace", action='store_true',
-                        help="Replace existing metadata fields with the new metadata. ")
+                        help="Replace existing metadata fields with the new metadata. "
+                             "Required for non-repetitive fields. "
+                             "Note that without 'replace' an existing value of a repetitive field is not duplicated. "
+                        )
     parser.add_argument('pid_or_file',
                         help="Either a CSV file or the PID of the dataset to edit. "
                              "One column of the file MUST have title 'PID'. "
                              "The other columns MUST have a typeName, as for the --value argument.")
     parser.add_argument('-v', '--value', action='append',
                         help="At least once in combination with a PID, none in combination with a CSV file. "
-                             "The new values for fields formatted as <typeName>=<value>. "
-                             "for example: title='New title'. "
+                             "The new values for fields must be formatted as <typeName>=<value>. "
+                             "For example: title='New title'. "
                              "A subfield in a compound field must be prefixed with "
                              "the typeName of the compound field and an @ sign, for example: "
                              "--value author@authorName='the name' "
-                             "--value author@authorAffiliation='the organization'. "
-                             "The quoting style for repetitive fields is <typeName>='[\"<value>\"]', "
-                             "for example: -v dansRightsHolder='[\"me\",\"O'\"'\"'Neill\"]', or in a CSV: "
-                             "'[\"me\",\"O''Neill\"]'. "
-                             "Note that without 'replace' an existing value of a repetitive field is not duplicated. "
-                             "Not repetitive fields require the 'replace' option. "
-                             "")
+                             "--value author@authorAffiliation='the organization'. ")
+    parser.add_argument('-q', '--quote_char', dest="quote_char", default='"',
+                        help="The quote character for a CSV file. The default is '\"'. "
+                             "The quoting style on the command line for repetitive fields "
+                             "is <typeName>='[\"<value>\"]', "
+                             'for example: -v dansRightsHolder=''["me","O\'Neill"]''. '
+                             'The default quoting style in a CSV matches plugins for Intellij and PyCharm: '
+                             '"[""me"",""O''Neill""]". With quote_char "\'" it becomes:' "'[\"me\",\"O''Neill\"]'")
     add_batch_processor_args(parser, report=False)
     add_dry_run_arg(parser)
     args = parser.parse_args()
@@ -68,7 +72,7 @@ def main():
         if args.value is not None:
             parser.error("-v/--value arguments not allowed in combination with CSV file: " + args.pid_or_file)
         with open(args.pid_or_file, newline='') as csvfile:
-            reader = DictReader(csvfile, quotechar="'", delimiter=',', quoting=csv.QUOTE_MINIMAL,
+            reader = DictReader(csvfile, quotechar=args.quote_char, delimiter=',', quoting=csv.QUOTE_MINIMAL,
                                 skipinitialspace=True, restkey='rest.column', escapechar=None)
             if '@' in ' '.join(reader.fieldnames):
                 raise Exception("Compound fields not supported")
