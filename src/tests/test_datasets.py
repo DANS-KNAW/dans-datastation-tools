@@ -75,7 +75,7 @@ class TestDatasets:
         data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': "['me','you']"}
 
         with pytest.raises(Exception) as e:
-            datasets.update_metadata(data)
+            datasets.update_metadata(data, replace=True)
         assert str(e.value) == 'Expecting value: line 1 column 2 (char 1)'  # wants double quotes gets single quotes
         assert str(e.type) == "<class 'json.decoder.JSONDecodeError'>"
 

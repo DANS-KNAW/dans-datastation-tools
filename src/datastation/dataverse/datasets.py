@@ -34,8 +34,8 @@ class Datasets:
             if data[key].startswith('['):
                 all_fields.append({'typeName': key, 'value': (json.loads(data[key]))})
             else:
-                # TODO (breaks tests) if not replace: # would cause a bad request
-                #      raise Exception(f"not repetitive fields must be replaced: {key}={data[key]}")
+                if not replace: # would cause a bad request
+                    raise Exception(f"not repetitive fields must be replaced: {key}={data[key]}")
                 all_fields.append({'typeName': key, 'value': data[key]})
         for key in compound_fields.keys():
             compound_field = compound_fields[key]
