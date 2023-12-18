@@ -43,7 +43,7 @@ class TestDatasets:
         assert len(caplog.records) == 1
         assert (caplog.records[0].message == 'None')
 
-    def test_update_metadata_with_subfield(self, caplog, capsys):
+    def test_update_metadata_with_repetitive_compound_field(self, caplog, capsys):
         caplog.set_level('INFO')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
@@ -65,6 +65,29 @@ class TestDatasets:
                  '"authorAffiliation": {"typeName": "authorAffiliation", "value": "yours"}}'
                  ']}]}\n\n'))
 
+        assert len(caplog.records) == 1
+        assert caplog.records[0].message == 'None'
+
+    def test_update_metadata_with_single_compound_field(self, caplog, capsys):
+        caplog.set_level('INFO')
+        client = DataverseClient(config=self.cfg)
+        datasets = Datasets(client, dry_run=True)
+        data = {'PID': 'doi:10.5072/FK2/8KQW3Y',
+                'socialScienceNotes@socialScienceNotesType': 'p',
+                'socialScienceNotes@socialScienceNotesSubject': 'q',
+                'socialScienceNotes@socialScienceNotesText': 'r'}
+
+        datasets.update_metadata(data)
+        assert (capsys.readouterr().out ==
+                ('DRY-RUN: only printing command, not sending it...\n'
+                 f'PUT {self.url}/api/datasets/:persistentId/editMetadata\n'
+                 "headers: {'X-Dataverse-key': 'xxx'}\n"
+                 "params: {'persistentId': 'doi:10.5072/FK2/8KQW3Y'}\n"
+                 'data: {"fields": [{"typeName": "socialScienceNotes", "value": '
+                 '{"socialScienceNotesType": {"typeName": "socialScienceNotesType", "value": "p"}, '
+                 '"socialScienceNotesSubject": {"typeName": "socialScienceNotesSubject", "value": "q"}, '
+                 '"socialScienceNotesText": {"typeName": "socialScienceNotesText", "value": "r"}}'
+                 '}]}\n\n'))
         assert len(caplog.records) == 1
         assert caplog.records[0].message == 'None'
 

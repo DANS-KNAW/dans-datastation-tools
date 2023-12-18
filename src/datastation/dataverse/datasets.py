@@ -24,8 +24,10 @@ class Datasets:
             child = type_name.split('@')[1]
             if parent not in compound_fields.keys():
                 compound_fields[parent] = {}
-            # TODO assuming for now compound fields are repetitive
-            compound_fields[parent][child] = json.loads(data[type_name])
+            if data[type_name].startswith('['):
+                compound_fields[parent][child] = json.loads(data[type_name])
+            else:
+                compound_fields[parent][child] = data[type_name]
 
         simple_fields = [key for key in type_names if '@' not in key]
 
@@ -39,15 +41,25 @@ class Datasets:
                 all_fields.append({'typeName': key, 'value': data[key]})
         for key in compound_fields.keys():
             compound_field = compound_fields[key]
-            count = len(compound_field[list(compound_field.keys())[0]])
-            compound_value = []
-            for i in range(count):
+            first_value = compound_field[list(compound_field.keys())[0]]
+            if type(first_value) is list:
+                count = len(first_value)
+                compound_value = []
+                for i in range(count):
+                    subfields = {}
+                    for subkey in compound_field.keys():
+                        value = compound_field[subkey][i]
+                        subfields[subkey] = ({'typeName': subkey, 'value': value})
+                    compound_value.append(subfields)
+                all_fields.append({'typeName': key, 'value': compound_value})
+            else:
+                if not replace: # would cause a bad request
+                    raise Exception(f"not repetitive fields must be replaced: {key}={compound_field}")
                 subfields = {}
                 for subkey in compound_field.keys():
-                    value = compound_field[subkey][i]
+                    value = compound_field[subkey]
                     subfields[subkey] = ({'typeName': subkey, 'value': value})
-                compound_value.append(subfields)
-            all_fields.append({'typeName': key, 'value': compound_value})
+                all_fields.append({'typeName': key, 'value': subfields})
 
         logging.debug(all_fields)
         dataset_api = self.dataverse_client.dataset(data['PID'])
