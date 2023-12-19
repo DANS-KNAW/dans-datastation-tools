@@ -31,7 +31,8 @@ def main():
                              "the typeName of the compound field and an @ sign, for example: "
                              "--value author@authorName='the name' "
                              "--value author@authorAffiliation='the organization'. "
-                             "Only repetitive compound fields are supported")
+                             "Only repetitive compound fields are supported. "
+                             "An attempt to update a protected field will result in '403 Client Error: Forbidden'. ")
     parser.add_argument('-q', '--quote_char', dest="quote_char", default='"',
                         help="The quote character for a CSV file. The default is '\"'. "
                              "The quoting style on the command line for repetitive fields "
