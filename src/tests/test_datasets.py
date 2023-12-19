@@ -72,24 +72,25 @@ class TestDatasets:
         caplog.set_level('INFO')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
+        # found on the VMs but not on te datastations
         data = {'PID': 'doi:10.5072/FK2/8KQW3Y',
                 'socialScienceNotes@socialScienceNotesType': 'p',
                 'socialScienceNotes@socialScienceNotesSubject': 'q',
                 'socialScienceNotes@socialScienceNotesText': 'r'}
+        # {"fields": [{"typeName": "socialScienceNotes", "value": {...}}]}
+        # would cause a bad request with  "Semantic error parsing dataset update Json: Empty value for field: Notes"
+        # in the server log
+        # {"fields": [{"typeName": "socialScienceNotes", "value": [{...}]}]}
+        # would cause an internal server error with an exception thrown by JsonParser.parseCompoundValue:
+        # JsonArrayImpl cannot be cast to class javax.json.JsonObject
 
-        datasets.update_metadata(data)
-        assert (capsys.readouterr().out ==
-                ('DRY-RUN: only printing command, not sending it...\n'
-                 f'PUT {self.url}/api/datasets/:persistentId/editMetadata\n'
-                 "headers: {'X-Dataverse-key': 'xxx'}\n"
-                 "params: {'persistentId': 'doi:10.5072/FK2/8KQW3Y'}\n"
-                 'data: {"fields": [{"typeName": "socialScienceNotes", "value": '
-                 '{"socialScienceNotesType": {"typeName": "socialScienceNotesType", "value": "p"}, '
-                 '"socialScienceNotesSubject": {"typeName": "socialScienceNotesSubject", "value": "q"}, '
-                 '"socialScienceNotesText": {"typeName": "socialScienceNotesText", "value": "r"}}'
-                 '}]}\n\n'))
-        assert len(caplog.records) == 1
-        assert caplog.records[0].message == 'None'
+        with pytest.raises(Exception) as e:
+            datasets.update_metadata(data)
+        assert str(e.value) == ("Not repetitive compound fields are not supported: "
+                                "socialScienceNotes={'socialScienceNotesType': 'p', 'socialScienceNotesSubject': 'q', "
+                                "'socialScienceNotesText': 'r'}")
+        assert capsys.readouterr().out == ''
+        assert len(caplog.records) == 0
 
     def test_update_metadata_with_invalid_quotes_for_repetitive_fields(self, caplog, capsys):
         caplog.set_level('DEBUG')

@@ -42,7 +42,9 @@ class Datasets:
         for key in compound_fields.keys():
             compound_field = compound_fields[key]
             first_value = compound_field[list(compound_field.keys())[0]]
-            if type(first_value) is list:
+            if type(first_value) is not list:
+                raise Exception(f"Not repetitive compound fields are not supported: {key}={compound_field}")
+            else:
                 count = len(first_value)
                 compound_value = []
                 for i in range(count):
@@ -52,14 +54,6 @@ class Datasets:
                         subfields[subkey] = ({'typeName': subkey, 'value': value})
                     compound_value.append(subfields)
                 all_fields.append({'typeName': key, 'value': compound_value})
-            else:
-                if not replace: # would cause a bad request
-                    raise Exception(f"not repetitive fields must be replaced: {key}={compound_field}")
-                subfields = {}
-                for subkey in compound_field.keys():
-                    value = compound_field[subkey]
-                    subfields[subkey] = ({'typeName': subkey, 'value': value})
-                all_fields.append({'typeName': key, 'value': subfields})
 
         logging.debug(all_fields)
         dataset_api = self.dataverse_client.dataset(data['PID'])

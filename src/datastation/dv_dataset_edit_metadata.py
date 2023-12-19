@@ -30,7 +30,8 @@ def main():
                              "A subfield in a compound field must be prefixed with "
                              "the typeName of the compound field and an @ sign, for example: "
                              "--value author@authorName='the name' "
-                             "--value author@authorAffiliation='the organization'. ")
+                             "--value author@authorAffiliation='the organization'. "
+                             "Only repetitive compound fields are supported")
     parser.add_argument('-q', '--quote_char', dest="quote_char", default='"',
                         help="The quote character for a CSV file. The default is '\"'. "
                              "The quoting style on the command line for repetitive fields "
@@ -74,8 +75,6 @@ def main():
         with open(args.pid_or_file, newline='') as csvfile:
             reader = DictReader(csvfile, quotechar=args.quote_char, delimiter=',', quoting=csv.QUOTE_MINIMAL,
                                 skipinitialspace=True, restkey='rest.column', escapechar=None)
-            if '@' in ' '.join(reader.fieldnames):
-                raise Exception("Compound fields not supported")
             validate_fieldnames(reader.fieldnames)
             run(reader)
     else:
