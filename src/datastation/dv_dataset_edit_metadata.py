@@ -32,7 +32,9 @@ def main():
                              "--value author@authorName='the name' "
                              "--value author@authorAffiliation='the organization'. "
                              "Only repetitive compound fields are supported. "
-                             "An attempt to update a protected field will result in '403 Client Error: Forbidden'. ")
+                             "An attempt to update a protected field will result in '403 Client Error: Forbidden'. "
+                             "You may also get a 403 when updating author details without updating the authorName. "
+                             "The server logs will show the details of the error. ")
     parser.add_argument('-q', '--quote_char', dest="quote_char", default='"',
                         help="The quote character for a CSV file. The default is '\"'. "
                              "The quoting style on the command line for repetitive fields "
