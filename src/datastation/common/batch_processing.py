@@ -41,9 +41,15 @@ class BatchProcessor:
         self.fail_on_first_error = fail_on_first_error
 
     def process_pids(self, pids_or_objects, callback):
-        """ pids_or_objects are passed to the callback one by one.
+        """ The callback is called for each entry in pids_or_objects.
 
-        If an element of pids_or_objects is a string or a dictionary with key 'PID',
+        Args:
+            pids_or_objects: a list of pids or objects, or a single pid or object
+            callback:        a function that takes a pid or object as argument
+        Returns:
+            None
+
+        If an entry of pids_or_objects is a string or a dictionary with key 'PID',
         the value is used for progress logging.
         """
         if type(pids_or_objects) is list:
