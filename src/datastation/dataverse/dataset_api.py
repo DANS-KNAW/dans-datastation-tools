@@ -1,9 +1,10 @@
 import json
+import logging
 import time
 
 import requests
 
-from datastation.common.utils import print_dry_run_message
+from datastation.common.utils import print_dry_run_message, raise_for_status
 
 
 class DatasetApi:
@@ -28,7 +29,7 @@ class DatasetApi:
             return None
         
         dv_resp = requests.get(url, headers=headers, params=params)
-        dv_resp.raise_for_status()
+        raise_for_status(dv_resp)
 
         resp_data = dv_resp.json()['data']
         return resp_data
@@ -44,7 +45,7 @@ class DatasetApi:
             return None
         else:
             r = requests.put(url, headers=headers, params=params, data=data)
-            r.raise_for_status()
+            raise_for_status(r)
             return r
 
     def get_role_assignments(self, dry_run=False):
@@ -56,7 +57,7 @@ class DatasetApi:
             return None
         else:
             r = requests.get(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.json()['data']
 
     def add_role_assignment(self, assignee, role, dry_run=False):
@@ -70,7 +71,7 @@ class DatasetApi:
             return None
         else:
             r = requests.post(url, headers=headers, params=params, json=role_assignment)
-            r.raise_for_status()
+            raise_for_status(r)
             return r
 
     def remove_role_assignment(self, assignment_id, dry_run=False):
@@ -82,7 +83,7 @@ class DatasetApi:
             return None
         else:
             r = requests.delete(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r
 
     def is_draft(self, dry_run=False):
@@ -94,7 +95,7 @@ class DatasetApi:
             return None
         else:
             r = requests.get(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.json()['data']['latestVersion']['versionState'] == 'DRAFT'
 
     def delete_draft(self, dry_run=False):
@@ -106,7 +107,7 @@ class DatasetApi:
             return None
         else:
             r = requests.delete(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.json()
 
     def destroy(self, dry_run=False):
@@ -122,7 +123,7 @@ class DatasetApi:
                 print_dry_run_message(method='DELETE', url=url, headers=headers, params=params)
                 return None
             r = requests.delete(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.json()
 
     def get_metadata(self, version=':latest', dry_run=False):
@@ -139,7 +140,7 @@ class DatasetApi:
             return None
         else:
             r = requests.get(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.json()['data']
 
     def get_metadata_export(self, exporter='dataverse_json', dry_run=False):
@@ -155,7 +156,7 @@ class DatasetApi:
             return None
         else:
             r = requests.get(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.text
 
     def get_locks(self, lock_type=None, dry_run=False):
@@ -169,7 +170,7 @@ class DatasetApi:
             return None
         else:
             r = requests.get(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.json()['data']
 
     def add_lock(self, lock_type, dry_run=False):
@@ -181,7 +182,7 @@ class DatasetApi:
             return None
         else:
             r = requests.post(url, headers=headers, params=params)
-            r.raise_for_status()
+            raise_for_status(r)
             return r.json()
 
     def remove_lock(self, lock_type=None, dry_run=False):
@@ -195,7 +196,7 @@ class DatasetApi:
             return None
         else:
             r = requests.delete(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.json()
 
     def remove_all_locks(self, dry_run=False):
@@ -209,7 +210,7 @@ class DatasetApi:
             print_dry_run_message(method='POST', url=url, headers=headers, params=params)
             return None
         r = requests.post(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.json()
 
     def reindex(self, dry_run=False):
@@ -223,7 +224,7 @@ class DatasetApi:
             return None
         else:
             r = requests.get(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.json()
 
     def modify_registration_metadata(self, dry_run=False):
@@ -235,7 +236,7 @@ class DatasetApi:
             return None
         else:
             r = requests.post(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.json()
 
     def get_files(self, version=':latest', dry_run=False):
@@ -247,7 +248,7 @@ class DatasetApi:
             return None
         else:
             r = requests.get(url, headers=headers, params=params)
-        r.raise_for_status()
+        raise_for_status(r)
         return r.json()['data']
 
     def await_unlock(self, lock_type=None, sleep_time=5, max_tries=10):

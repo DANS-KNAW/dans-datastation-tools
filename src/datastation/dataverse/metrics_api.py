@@ -14,5 +14,5 @@ class MetricsApi:
             print(f"Would have sent the following request: {url}")
             return
         r = requests.get(url)
-        r.raise_for_status()
+        raise_for_status(r)()
         return r.json()['data']

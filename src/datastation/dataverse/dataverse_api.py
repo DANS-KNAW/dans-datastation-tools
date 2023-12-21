@@ -18,7 +18,7 @@ class DataverseApi:
             return None
 
         dv_resp = requests.get(url, headers=headers)
-        dv_resp.raise_for_status()
+        raise_for_status(dv_resp)
 
         resp_data = dv_resp.json()["data"]
         return resp_data
@@ -32,5 +32,5 @@ class DataverseApi:
             return None
         else:
             r = requests.get(url, headers=headers)
-        r.raise_for_status()
+        raise_for_status(r)()
         return r.json()['data']['message']

@@ -54,7 +54,7 @@ class SearchApi:
 
         while True:
             dv_resp = requests.get(self.url, headers=headers, params=params)
-            dv_resp.raise_for_status()
+            raise_for_status(dv_resp)
 
             data = dv_resp.json()["data"]
             items = data["items"]

@@ -1,4 +1,5 @@
 import json as jsonlib
+import logging
 import os
 import shutil
 import argparse
@@ -17,6 +18,12 @@ def add_batch_processor_args(parser, report: bool = True):
     if report:
         parser.add_argument('-r', '--report-file', default='-', help="the report file, or - for stdout",
                             dest='report_file')
+
+
+def raise_for_status(r):
+    if r.status_code >= 400:
+        logging.error(f"{r.status_code} {r.reason} {r.json()}")
+    r.raise_for_status()
 
 
 def positive_int_argument_converter(value):
