@@ -37,7 +37,7 @@ class Datasets:
                 all_fields.append({'typeName': key, 'value': (json.loads(data[key]))})
             else:
                 if not replace: # would cause a bad request
-                    raise Exception(f"not repetitive fields must be replaced: {key}={data[key]}")
+                    raise Exception(f"Single value fields must be replaced: {key}={data[key]}")
                 all_fields.append({'typeName': key, 'value': data[key]})
         for key in compound_fields.keys():
             compound_field = compound_fields[key]
