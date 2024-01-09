@@ -43,7 +43,7 @@ class Datasets:
             compound_field = compound_fields[key]
             first_value = compound_field[list(compound_field.keys())[0]]
             if type(first_value) is not list:
-                raise Exception(f"Not repetitive compound fields are not supported: {key}={compound_field}")
+                raise Exception(f"Single value compound fields are not supported: {key}={compound_field}")
             else:
                 count = len(first_value)
                 compound_value = []
