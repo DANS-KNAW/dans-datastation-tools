@@ -19,19 +19,19 @@ class Datasets:
         compound_fields = {}  # assumed to be repetitive
         simple_fields = {}
         for type_name in type_names:
-            match = re.match('([-a-z]+)(\\[([0-9]+)])?(@([-a-z]+))?$', type_name, re.IGNORECASE)
+            match = re.match('([-a-z]+)((\\[([0-9]+)])|@)?([-a-z]+)?$', type_name, re.IGNORECASE)
             if match is None:
-                raise Exception(f"Invalid typeName {type_name}={data[type_name]}")
+                raise Exception(f"Invalid typeName [{type_name}] : {data}")
+            if '@' in type_name:
+                raise Exception(f"Single compound fields [{type_name}] are not supported : {data}")
             if '[' not in type_name:
                 simple_fields[type_name] = data[type_name]
-                if '@' in type_name:
-                    raise Exception(f"Single compound fields are not supported: {type_name}={data[type_name]}")
                 if not replace:
-                    raise Exception(f"Single value fields must be replaced: {type_name}={data[type_name]}")
+                    raise Exception(f"Single value fields [{type_name}] must be replaced : {data}")
             else:
                 parent = match.group(1)
                 child = match.group(5)
-                index = int(match.group(3))
+                index = int(match.group(4))
                 if child is None:
                     if parent not in simple_fields.keys():
                         simple_fields[parent] = []
