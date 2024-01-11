@@ -15,6 +15,7 @@ dicttoxml = "^1.7.4"
 pyYAML = "^6.0"
 psycopg = "^3.1.8"
 rich = "^13.7.0"
+bs4 = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.3.1"

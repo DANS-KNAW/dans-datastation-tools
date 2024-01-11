@@ -29,19 +29,12 @@ def main():
                              "For example: title='New title'. "
                              "A subfield in a compound field must be prefixed with "
                              "the typeName of the compound field and an @ sign, for example: "
-                             "--value author@authorName='the name' "
-                             "--value author@authorAffiliation='the organization'. "
+                             "--value author[0]@authorName='the name' "
+                             "--value author[0]@authorAffiliation='the organization'. "
                              "Only repetitive compound fields are supported. "
                              "An attempt to update a protected field will result in '403 Client Error: Forbidden'. "
                              "You may also get a 403 when updating author details without updating the authorName. "
                              "The server logs will show the details of the error. ")
-    parser.add_argument('-q', '--quote_char', dest="quote_char", default='"',
-                        help="The quote character for a CSV file. The default is '\"'. "
-                             "The quoting style on the command line for repetitive fields "
-                             "is <typeName>='[\"<value>\"]', "
-                             'for example: -v dansRightsHolder=''["me","O\'Neill"]''. '
-                             'The default quoting style in a CSV matches plugins for Intellij and PyCharm: '
-                             '"[""me"",""O''Neill""]". With quote_char "\'" it becomes:' "'[\"me\",\"O''Neill\"]'")
     add_batch_processor_args(parser, report=False)
     add_dry_run_arg(parser)
     args = parser.parse_args()
@@ -52,36 +45,24 @@ def main():
         batch_processor = BatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast)
         batch_processor.process_pids(obj_list, lambda obj: datasets.update_metadata(data=obj, replace=args.replace))
 
-    def validate_fieldnames(fieldnames, suffix=' in ' + args.pid_or_file):
-        if 'PID' not in fieldnames:
-            parser.error(f"No column 'PID' found" + suffix)
-
-        if len(fieldnames) < 2:
-            parser.error(f"No values specified" + suffix)
-
-        pat = re.compile('([-a-zA-Z]+)?[-a-zA-Z]+')
-        for name in fieldnames:
-            if not pat.match(name):
-                parser.error(f"Invalid typeName {name}" + suffix)
-
     def parse_value_args():
         obj = {'PID': args.pid_or_file}
         for kv in args.value:
-            key_value = kv.split('=')
+            key_value = kv.split('=', 2)
             obj[key_value[0]] = key_value[1]
-        validate_fieldnames(obj.keys(), suffix='')
-        return [obj]
+        return obj
 
     if isfile(expanduser(args.pid_or_file)):
         if args.value is not None:
             parser.error("-v/--value arguments not allowed in combination with CSV file: " + args.pid_or_file)
         with open(args.pid_or_file, newline='') as csvfile:
-            reader = DictReader(csvfile, quotechar=args.quote_char, delimiter=',', quoting=csv.QUOTE_MINIMAL,
-                                skipinitialspace=True, restkey='rest.column', escapechar=None)
-            validate_fieldnames(reader.fieldnames)
+            # restkey must be an invalid <typeName> to prevent it from being processed
+            reader = DictReader(csvfile, skipinitialspace=True, restkey='rest.column')
+            if 'PID' not in reader.fieldnames:
+                parser.error(f"No column 'PID' found in " + args.pid_or_file)
             run(reader)
     else:
-        run(parse_value_args())
+        run([parse_value_args()])
 
 
 if __name__ == '__main__':

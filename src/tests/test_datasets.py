@@ -30,7 +30,7 @@ class TestDatasets:
         caplog.set_level('INFO')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
-        data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'dansRightsHolder': '["me","O\'Neill"]'}
+        data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'dansRightsHolder[0]': 'me', 'dansRightsHolder[1]': "O\'Neill"}
 
         datasets.update_metadata(data, replace=False)
         assert (capsys.readouterr().out ==
@@ -48,8 +48,10 @@ class TestDatasets:
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
         data = {'PID': 'doi:10.5072/FK2/8KQW3Y',
-                'author@authorName': '["me","you"]',
-                'author@authorAffiliation': '["mine","yours"]'}
+                'author[0]@authorName': 'me',
+                'author[0]@authorAffiliation': 'mine',
+                'author[1]@authorName': 'you',
+                'author[1]@authorAffiliation': 'yours'}
 
         datasets.update_metadata(data)
 
@@ -86,39 +88,21 @@ class TestDatasets:
 
         with pytest.raises(Exception) as e:
             datasets.update_metadata(data)
-        assert str(e.value) == ("Not repetitive compound fields are not supported: "
-                                "socialScienceNotes={'socialScienceNotesType': 'p', 'socialScienceNotesSubject': 'q', "
-                                "'socialScienceNotesText': 'r'}")
+        assert str(e.value) == ("Single compound fields are not supported: "
+                                "socialScienceNotes@socialScienceNotesType=p")
         assert capsys.readouterr().out == ''
         assert len(caplog.records) == 0
-
-    def test_update_metadata_with_invalid_quotes_for_repetitive_fields(self, caplog, capsys):
-        caplog.set_level('DEBUG')
-        client = DataverseClient(config=self.cfg)
-        datasets = Datasets(client, dry_run=True)
-        data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': "['me','you']"}
-
-        with pytest.raises(Exception) as e:
-            datasets.update_metadata(data, replace=True)
-        assert str(e.value) == 'Expecting value: line 1 column 2 (char 1)'  # wants double quotes gets single quotes
-        assert str(e.type) == "<class 'json.decoder.JSONDecodeError'>"
-
-        assert capsys.readouterr().out == ''
-        assert len(caplog.records) == 1
-        assert caplog.records[0].levelname == 'DEBUG'
-        assert (caplog.records[0].message ==
-                "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': " '"[\'me\',\'you\']"}')
 
     def test_update_metadata_with_too_many_values(self, caplog, capsys):
         caplog.set_level('DEBUG')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
-        data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': 'me', 'rest.column': 'you'}
+        data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'xxx', 'dansRightsHolder[0]': 'me', 'rest.column': 'you'}
         with pytest.raises(Exception) as e:
-            datasets.update_metadata(data)
-        assert str(e.value) == 'Quoting problem or too many values.'
+            datasets.update_metadata(data, replace=True)
+        assert str(e.value) == "Invalid typeName rest.column=you"
         assert capsys.readouterr().out == ''
         assert len(caplog.records) == 1
-        assert caplog.records[0].levelname == 'ERROR'
-        assert (caplog.records[0].message ==
-                "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title', 'author': 'me', 'rest.column': 'you'}")
+        assert caplog.records[0].levelname == 'DEBUG'
+        assert caplog.records[0].message == ("{'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'xxx', 'dansRightsHolder[0]': "
+                                             "'me', 'rest.column': 'you'}")
