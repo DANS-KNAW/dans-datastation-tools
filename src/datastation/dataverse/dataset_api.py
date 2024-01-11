@@ -1,5 +1,4 @@
 import json
-import logging
 import time
 
 import requests
@@ -33,20 +32,6 @@ class DatasetApi:
 
         resp_data = dv_resp.json()['data']
         return resp_data
-
-    def edit_metadata(self, data: dict, dry_run=False, replace: bool = False):
-        url = f'{self.server_url}/api/datasets/:persistentId/editMetadata'
-        params = {'persistentId': self.pid}
-        if replace:
-            params['replace'] = 'true'
-        headers = {'X-Dataverse-key': self.api_token}
-        if dry_run:
-            print_dry_run_message(method='PUT', url=url, headers=headers, params=params, data=data)
-            return None
-        else:
-            r = requests.put(url, headers=headers, params=params, data=data)
-            raise_for_status(r)
-            return r
 
     def get_role_assignments(self, dry_run=False):
         url = f'{self.server_url}/api/datasets/:persistentId/assignments'
@@ -265,3 +250,17 @@ class DatasetApi:
         else:
             message = f'Locks {lock_type} not removed after {max_tries} tries.'
         raise RuntimeError(message)
+
+    def edit_metadata(self, data: dict, dry_run=False, replace: bool = False):
+        url = f'{self.server_url}/api/datasets/:persistentId/editMetadata'
+        params = {'persistentId': self.pid}
+        if replace:
+            params['replace'] = 'true'
+        headers = {'X-Dataverse-key': self.api_token}
+        if dry_run:
+            print_dry_run_message(method='PUT', url=url, headers=headers, params=params, data=data)
+            return None
+        else:
+            r = requests.put(url, headers=headers, params=params, data=data)
+            raise_for_status(r)
+            return r
