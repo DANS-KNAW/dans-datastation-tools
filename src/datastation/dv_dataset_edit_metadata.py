@@ -16,22 +16,21 @@ def main():
     parser = ArgumentParser(description='Edits one or more, potentially published, datasets. Requires an API token.')
     parser.add_argument('-r', '--replace', dest="replace", action='store_true',
                         help="Replace existing metadata fields with the new metadata. "
-                             "Required for non-repetitive fields. "
-                             "Note that without 'replace' an existing value of a repetitive field is not duplicated. "
+                             "Required for single-value fields. "
+                             "Note that without 'replace' an existing value of a multi-value field is not duplicated. "
                         )
     parser.add_argument('pid_or_file',
                         help="Either a CSV file or the PID of the dataset to edit. "
                              "One column of the file MUST have title 'PID'. "
-                             "The other columns MUST have a typeName, as for the --value argument.")
+                             "The other columns MUST have a <typeName>, as for the --value argument.")
     parser.add_argument('-v', '--value', action='append',
                         help="At least once in combination with a PID, none in combination with a CSV file. "
                              "The new values for fields must be formatted as <typeName>=<value>. "
                              "For example: title='New title'. "
-                             "A subfield in a compound field must be prefixed with the typeName of the compound field "
-                             "and an index (single compound fields are not implemented), for example: "
-                             "--value author[0]authorName='the name' "
-                             "--value author[0]authorAffiliation='the organization'. "
-                             "Only repetitive compound fields are supported. "
+                             "A subfield in a compound field must be prefixed with the <typeName> of the compound field "
+                             "and an index (single-value compound fields are not implemented), for example: "
+                             "--value 'author[0]authorName=the name' "
+                             "--value 'author[0]authorAffiliation=the organization'. "
                              "An attempt to update a protected field will result in '403 Client Error: Forbidden'. "
                              "You may also get a 403 when updating author details without updating the authorName. "
                              "The server logs will show the details of the error. ")
