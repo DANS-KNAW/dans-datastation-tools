@@ -33,7 +33,7 @@ class TestDatasets:
         data = {'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title'}
         with pytest.raises(Exception) as e:
             datasets.update_metadata(data, replace=False)
-        assert str(e.value) == ("Single value fields [title] must be replaced : "
+        assert str(e.value) == ("Single-value fields [title] must be replaced : "
                                 "{'PID': 'doi:10.5072/FK2/8KQW3Y', 'title': 'New title'}")
         assert capsys.readouterr().out == ''
         assert len(caplog.records) == 0
