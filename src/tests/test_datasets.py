@@ -38,7 +38,7 @@ class TestDatasets:
         assert capsys.readouterr().out == ''
         assert len(caplog.records) == 0
 
-    def test_update_metadata_with_repetitive_field_without_replacing(self, caplog, capsys):
+    def test_update_metadata_with_multi_value_field_without_replacing(self, caplog, capsys):
         caplog.set_level('INFO')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
@@ -55,7 +55,7 @@ class TestDatasets:
         assert len(caplog.records) == 1
         assert (caplog.records[0].message == 'None')
 
-    def test_update_metadata_with_repetitive_compound_field(self, caplog, capsys):
+    def test_update_metadata_with_multi_value_compound_field(self, caplog, capsys):
         caplog.set_level('INFO')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
@@ -82,7 +82,7 @@ class TestDatasets:
         assert len(caplog.records) == 1
         assert caplog.records[0].message == 'None'
 
-    def test_update_metadata_with_single_compound_field(self, caplog, capsys):
+    def test_update_metadata_with_single_value_compound_field(self, caplog, capsys):
         caplog.set_level('INFO')
         client = DataverseClient(config=self.cfg)
         datasets = Datasets(client, dry_run=True)
@@ -98,12 +98,12 @@ class TestDatasets:
         # would cause an internal server error with an exception thrown by JsonParser.parseCompoundValue:
         # JsonArrayImpl cannot be cast to class javax.json.JsonObject
         #
-        # comrades-dclDryLab and comrades-dclWetLab seem to be the only single compound fields
+        # comrades-dclDryLab and comrades-dclWetLab seem to be the only single-value compound fields
         # on dd-dtap/provisioning/files/custom-metadata-blocks/*.tsv
 
         with pytest.raises(Exception) as e:
             datasets.update_metadata(data)
-        assert str(e.value) == ('Single compound fields '
+        assert str(e.value) == ('Single-value compound fields '
                                 "[socialScienceNotes@socialScienceNotesType] are not supported : {"
                                 "'PID': 'doi:10.5072/FK2/8KQW3Y', "
                                 "'socialScienceNotes@socialScienceNotesType': 'p', "
