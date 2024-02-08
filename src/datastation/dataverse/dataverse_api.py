@@ -1,13 +1,18 @@
 import requests
+import json
 
 
 from datastation.common.utils import print_dry_run_message
 
 
 class DataverseApi:
-    def __init__(self, server_url, api_token):
+    def __init__(self, server_url, api_token, alias=None):
         self.server_url = server_url
         self.api_token = api_token
+        self.alias = alias  # Methods should use this one if specified
+
+    def get_alias(self):
+        return self.alias
 
     # get json data for a specific dataverses API endpoint using an API token
     def get_resource_data(self, resource, alias="root", dry_run=False):
@@ -30,7 +35,9 @@ class DataverseApi:
     def get_roles(self, alias="root", dry_run=False):
         return self.get_resource_data("roles", alias, dry_run)
 
-    def get_assignments(self, alias="root", dry_run=False):
+    def get_role_assignments(self, alias="root", dry_run=False):
+        if self.alias is not None:
+            alias = self.alias
         return self.get_resource_data("assignments", alias, dry_run)
 
     def get_groups(self, alias="root", dry_run=False):
@@ -47,3 +54,31 @@ class DataverseApi:
             r = requests.get(url, headers=headers)
         r.raise_for_status()
         return r.json()['data']['message']
+
+    def add_role_assignment(self, assignee, role, alias=None, dry_run=False):
+        if self.alias is not None:
+            alias = self.alias
+        url = f'{self.server_url}/api/dataverses/{alias}/assignments'
+        headers = {'X-Dataverse-key': self.api_token, 'Content-type': 'application/json'}
+        role_assignment = {"assignee": assignee, "role": role}
+        if dry_run:
+            print_dry_run_message(method='POST', url=url, headers=headers,
+                                  data=json.dumps(role_assignment))
+            return None
+        else:
+            r = requests.post(url, headers=headers, json=role_assignment)
+            r.raise_for_status()
+            return r
+
+    def remove_role_assignment(self, assignment_id, alias=None, dry_run=False):
+        if self.alias is not None:
+            alias = self.alias
+        url = f'{self.server_url}/api/dataverses/{alias}/assignments/{assignment_id}'
+        headers = {'X-Dataverse-key': self.api_token, 'Content-type': 'application/json'}
+        if dry_run:
+            print_dry_run_message(method='DELETE', url=url, headers=headers)
+            return None
+        else:
+            r = requests.delete(url, headers=headers)
+        r.raise_for_status()
+        return r
