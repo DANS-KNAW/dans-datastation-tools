@@ -16,6 +16,7 @@ pyYAML = "^6.0"
 psycopg = "^3.1.8"
 rich = "^13.7.0"
 bs4 = "^0.0.1"
+argparse-formatter = "^1.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.3.1"
@@ -51,4 +52,5 @@ dv-user-import = "datastation.dv_user_import:main"
 dv-notifications-cleanup="datastation.dv_notifications_cleanup:main"
 ingest-flow = "datastation.ingest_flow:main"
 dv-dataverse-root-collect-storage-usage = "datastation.dv_dataverse_root_collect_storage_usage:main"
+dv-dataverse-root-collect-permission-overview = "datastation.dv_dataverse_root_collect_permission_overview:main"
 datastation-get-component-versions = "datastation.datastation_get_component_versions:main"
