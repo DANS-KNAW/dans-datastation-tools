@@ -1,5 +1,3 @@
-import csv
-import re
 from argparse import ArgumentParser
 from csv import DictReader
 from os.path import expanduser, isfile
