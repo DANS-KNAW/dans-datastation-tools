@@ -7,7 +7,7 @@ from datastation.common.csv import CsvReport
 
 def get_pids(pid_or_pids_file, search_api=None, query="*", subtree="root", object_type="dataset", dry_run=False):
     """ kept for backward compatibility"""
-    get_entries(pid_or_pids_file, search_api, query, subtree, object_type, dry_run)
+    return get_entries(pid_or_pids_file, search_api, query, subtree, object_type, dry_run)
 
 
 def get_entries(entries, search_api=None, query="*", subtree="root", object_type="dataset", dry_run=False):
@@ -42,12 +42,12 @@ def get_entries(entries, search_api=None, query="*", subtree="root", object_type
 
 class BatchProcessor:
     def __init__(self, wait=0.1, fail_on_first_error=True):
-        """ kept for backward compatibility"""
         self.wait = wait
         self.fail_on_first_error = fail_on_first_error
 
     def process_pids(self, entries, callback):
-        self.process_entries(entries, callback)
+        """ kept for backward compatibility"""
+        return self.process_entries(entries, callback)
 
     def process_entries(self, entries, callback):
         """ The callback is called for each entry in entries.
@@ -100,7 +100,7 @@ class BatchProcessorWithReport(BatchProcessor):
 
     def process_pids(self, entries, callback):
         """ kept for backward compatibility"""
-        self.process_entries(entries, callback)
+        return self.process_entries(entries, callback)
 
     def process_entries(self, entries, callback):
         with CsvReport(os.path.expanduser(self.report_file), self.headers) as csv_report:
