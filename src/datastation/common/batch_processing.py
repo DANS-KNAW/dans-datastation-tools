@@ -59,7 +59,7 @@ def get_aliases(alias_or_aliases_file, dry_run=False):
         return [alias_or_aliases_file]
 
 
-class BatchProcessor:
+class DatasetBatchProcessor:
     def __init__(self, wait=0.1, fail_on_first_error=True):
         self.wait = wait
         self.fail_on_first_error = fail_on_first_error
@@ -88,7 +88,7 @@ class BatchProcessor:
                 logging.debug("fail_on_first_error is False, continuing...")
 
 
-class BatchProcessorWithReport(BatchProcessor):
+class DatasetBatchProcessorWithReport(DatasetBatchProcessor):
 
     def __init__(self, report_file=None, headers=None, wait=0.1, fail_on_first_error=True):
         super().__init__(wait, fail_on_first_error)

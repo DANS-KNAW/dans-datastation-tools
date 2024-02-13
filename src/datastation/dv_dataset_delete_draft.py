@@ -1,13 +1,13 @@
 import argparse
 from datetime import datetime
 
-from datastation.common.batch_processing import BatchProcessor, get_pids, BatchProcessorWithReport
+from datastation.common.batch_processing import DatasetBatchProcessor, get_pids, DatasetBatchProcessorWithReport
 from datastation.common.config import init
 from datastation.common.utils import add_batch_processor_args, add_dry_run_arg
 from datastation.dataverse.dataverse_client import DataverseClient
 
 
-def delete_dataset_drafts(args, dataverse_client: DataverseClient, batch_processor: BatchProcessor):
+def delete_dataset_drafts(args, dataverse_client: DataverseClient, batch_processor: DatasetBatchProcessor):
     pids = get_pids(args.pid_or_pid_file)
     batch_processor.process_pids(pids,
                                  lambda pid, csv_report: delete_dataset_draft(pid,
@@ -37,7 +37,7 @@ def main():
     args = parser.parse_args()
 
     dataverse_client = DataverseClient(config['dataverse'])
-    batch_processor = BatchProcessorWithReport(wait=args.wait, report_file=args.report_file)
+    batch_processor = DatasetBatchProcessorWithReport(wait=args.wait, report_file=args.report_file)
     delete_dataset_drafts(args, dataverse_client, batch_processor)
 
 
