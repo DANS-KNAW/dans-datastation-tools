@@ -42,7 +42,7 @@ def main():
         client = DataverseClient(config['dataverse'])
         datasets = Datasets(client, dry_run=args.dry_run)
         batch_processor = BatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast)
-        batch_processor.process_pids(obj_list, lambda obj: datasets.update_metadata(data=obj, replace=args.replace))
+        batch_processor.process_entries(obj_list, lambda obj: datasets.update_metadata(data=obj, replace=args.replace))
 
     def parse_value_args():
         obj = {'PID': args.pid_or_file}

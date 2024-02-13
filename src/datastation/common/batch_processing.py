@@ -1,76 +1,85 @@
 import logging
 import os
-import sys
 import time
 
 from datastation.common.csv import CsvReport
 
 
 def get_pids(pid_or_pids_file, search_api=None, query="*", subtree="root", object_type="dataset", dry_run=False):
+    """ kept for backward compatibility"""
+    get_entries(pid_or_pids_file, search_api, query, subtree, object_type, dry_run)
+
+
+def get_entries(entries, search_api=None, query="*", subtree="root", object_type="dataset", dry_run=False):
     """
 
     Args:
-        pid_or_pids_file: The dataset pid, or a file with a list of pids.
-        search_api:       must be provided if pid_or_pids_file is None
+        entries:          A string (e.g. a PID for the default object_type 'dataset'),
+                          or a file with a list of strings or comma separated values.
+        search_api:       must be provided if entries is None
         query:            passed on to search_api().search
         object_type:      passed on to search_api().search
         subtree (object): passed on to search_api().search
         dry_run:          Do not perform the action, but show what would be done.
-                          Only applicable if pid_or_pids_file is None.
+                          Only applicable if entries is None.
 
-    Returns: an iterator with pids,
-             if pid_or_pids_file is not provided, it searches for all datasets
+    Returns: an iterator with strings or comma separated values.
+             if entries is not provided, it searches for all objects of object_type
              and extracts their pids, fetching the result pages lazy.
     """
-    if pid_or_pids_file is None:
+    if entries is None:
         result = search_api.search(query=query, subtree=subtree, object_type=object_type, dry_run=dry_run)
         return map(lambda rec: rec['global_id'], result)
-    elif os.path.isfile(os.path.expanduser(pid_or_pids_file)):
-        pids = []
-        with open(os.path.expanduser(pid_or_pids_file)) as f:
+    elif os.path.isfile(os.path.expanduser(entries)):
+        objects = []
+        with open(os.path.expanduser(entries)) as f:
             for line in f:
-                pids.append(line.strip())
-        return pids
+                objects.append(line.strip())
+        return objects
     else:
-        return [pid_or_pids_file]
+        return [entries]
 
 
 class BatchProcessor:
     def __init__(self, wait=0.1, fail_on_first_error=True):
+        """ kept for backward compatibility"""
         self.wait = wait
         self.fail_on_first_error = fail_on_first_error
 
-    def process_pids(self, pids_or_objects, callback):
-        """ The callback is called for each entry in pids_or_objects.
+    def process_pids(self, entries, callback):
+        self.process_entries(entries, callback)
+
+    def process_entries(self, entries, callback):
+        """ The callback is called for each entry in entries.
 
         Args:
-            pids_or_objects: a list of pids or objects, or a single pid or object
-            callback:        a function that takes a pid or object as argument
+            entries:  a single string (e.g. PID) or dict, or a list of string or dicts
+            callback: a function that takes a single entry as argument
         Returns:
             None
 
-        If an entry of pids_or_objects is a string or a dictionary with key 'PID',
+        If an entry is a string or a dictionary with key 'PID',
         the value is used for progress logging.
         """
-        if type(pids_or_objects) is list:
-            num_pids = len(pids_or_objects)
-            logging.info(f"Start batch processing on {num_pids} pids")
+        if type(entries) is list:
+            num_entries = len(entries)
+            logging.info(f"Start batch processing on {num_entries} entries")
         else:
-            logging.info(f"Start batch processing on unknown number of pids")
-            num_pids = -1
+            logging.info(f"Start batch processing on unknown number of entries")
+            num_entries = -1
         i = 0
-        for obj in pids_or_objects:
+        for obj in entries:
             i += 1
             try:
                 if self.wait > 0 and i > 1:
-                    logging.debug(f"Waiting {self.wait} seconds before processing next pid")
+                    logging.debug(f"Waiting {self.wait} seconds before processing next entry")
                     time.sleep(self.wait)
                 if type(obj) is dict and 'PID' in obj.keys():
-                    logging.info(f"Processing {i} of {num_pids}: {obj['PID']}")
+                    logging.info(f"Processing {i} of {num_entries}: {obj['PID']}")
                 elif type(obj) is str:
-                    logging.info(f"Processing {i} of {num_pids}: {obj}")
+                    logging.info(f"Processing {i} of {num_entries}: {obj}")
                 else:
-                    logging.info(f"Processing {i} of {num_pids}")
+                    logging.info(f"Processing {i} of {num_entries}")
                 callback(obj)
             except Exception as e:
                 logging.exception("Exception occurred", exc_info=True)
@@ -89,6 +98,10 @@ class BatchProcessorWithReport(BatchProcessor):
         self.report_file = report_file
         self.headers = headers
 
-    def process_pids(self, pids_or_objects, callback):
+    def process_pids(self, entries, callback):
+        """ kept for backward compatibility"""
+        self.process_entries(entries, callback)
+
+    def process_entries(self, entries, callback):
         with CsvReport(os.path.expanduser(self.report_file), self.headers) as csv_report:
-            super().process_pids(pids_or_objects, lambda pid: callback(pid, csv_report))
+            super().process_entries(entries, lambda entry: callback(entry, csv_report))
