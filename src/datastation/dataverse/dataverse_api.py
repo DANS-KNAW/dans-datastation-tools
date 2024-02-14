@@ -35,10 +35,8 @@ class DataverseApi:
     def get_roles(self, alias="root", dry_run=False):
         return self.get_resource_data("roles", alias, dry_run)
 
-    def get_role_assignments(self, alias="root", dry_run=False):
-        if self.alias is not None:
-            alias = self.alias
-        return self.get_resource_data("assignments", alias, dry_run)
+    def get_role_assignments(self, dry_run=False):
+        return self.get_resource_data("assignments", self.alias, dry_run)
 
     def get_groups(self, alias="root", dry_run=False):
         return self.get_resource_data("groups", alias, dry_run)
@@ -55,10 +53,8 @@ class DataverseApi:
         r.raise_for_status()
         return r.json()['data']['message']
 
-    def add_role_assignment(self, assignee, role, alias=None, dry_run=False):
-        if self.alias is not None:
-            alias = self.alias
-        url = f'{self.server_url}/api/dataverses/{alias}/assignments'
+    def add_role_assignment(self, assignee, role, dry_run=False):
+        url = f'{self.server_url}/api/dataverses/{self.alias}/assignments'
         headers = {'X-Dataverse-key': self.api_token, 'Content-type': 'application/json'}
         role_assignment = {"assignee": assignee, "role": role}
         if dry_run:
@@ -70,10 +66,8 @@ class DataverseApi:
             r.raise_for_status()
             return r
 
-    def remove_role_assignment(self, assignment_id, alias=None, dry_run=False):
-        if self.alias is not None:
-            alias = self.alias
-        url = f'{self.server_url}/api/dataverses/{alias}/assignments/{assignment_id}'
+    def remove_role_assignment(self, assignment_id, dry_run=False):
+        url = f'{self.server_url}/api/dataverses/{self.alias}/assignments/{assignment_id}'
         headers = {'X-Dataverse-key': self.api_token, 'Content-type': 'application/json'}
         if dry_run:
             print_dry_run_message(method='DELETE', url=url, headers=headers)

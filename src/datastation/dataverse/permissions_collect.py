@@ -61,7 +61,7 @@ class PermissionsCollect:
         return ', '.join(result_list)
 
     def get_assignment_info(self, alias):
-        resp_data = self.dataverse_client.dataverse().get_role_assignments(alias)
+        resp_data = self.dataverse_client.dataverse(alias).get_role_assignments()
         # flatten and compact it... no list comprehension though
         result_list = []
         for assignment in resp_data:
