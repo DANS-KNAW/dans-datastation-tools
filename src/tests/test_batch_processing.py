@@ -2,13 +2,13 @@ import os
 import time
 from datetime import datetime
 
-from datastation.common.batch_processing import DatasetBatchProcessor, get_pids
+from datastation.common.batch_processing import BatchProcessor, get_pids
 
 
 class TestBatchProcessor:
 
     def test_process_pids(self, capsys):
-        batch_processor = DatasetBatchProcessor()
+        batch_processor = BatchProcessor()
         pids = ["1", "2", "3"]
         callback = lambda pid: print(pid)
         batch_processor.process_pids(pids, callback)
@@ -16,7 +16,7 @@ class TestBatchProcessor:
         assert captured.out == "1\n2\n3\n"
 
     def test_process_pids_with_wait_on_iterator(self, capsys):
-        batch_processor = DatasetBatchProcessor(wait=0.1)
+        batch_processor = BatchProcessor(wait=0.1)
 
         def as_is(rec):
             time.sleep(0.1)
@@ -37,7 +37,7 @@ class TestBatchProcessor:
             time.sleep(0.1)
             print(f"lazy-{rec}")
             return rec
-        batch_processor = DatasetBatchProcessor(wait=0.1)
+        batch_processor = BatchProcessor(wait=0.1)
         pids = [as_is(rec) for rec in  ["1", "2", "3"]]
         callback = lambda pid: print(pid)
         start_time = datetime.now()

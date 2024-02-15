@@ -4,7 +4,7 @@ from datetime import datetime
 
 import requests
 
-from datastation.common.batch_processing import get_pids, DatasetBatchProcessorWithReport
+from datastation.common.batch_processing import get_pids, BatchProcessorWithReport
 from datastation.common.config import init
 from datastation.common.utils import add_batch_processor_args, add_dry_run_arg
 from datastation.dataverse.dataverse_client import DataverseClient
@@ -12,7 +12,7 @@ from datastation.dataverse.dataverse_client import DataverseClient
 
 def reingest_tabular_files_in_datasets(args, dataverse_client: DataverseClient):
     pids = get_pids(args.pid_or_pid_file)
-    batch_processor = DatasetBatchProcessorWithReport(report_file=args.report_file, wait=args.wait,
+    batch_processor = BatchProcessorWithReport(report_file=args.report_file, wait=args.wait,
                                                       fail_on_first_error=args.fail_fast,
                                                       headers=['DOI', 'Modified', 'Change', 'Messages'])
     batch_processor.process_pids(pids,

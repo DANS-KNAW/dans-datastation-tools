@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from datastation.common.batch_processing import DatasetBatchProcessor, get_pids
+from datastation.common.batch_processing import BatchProcessor, get_pids
 from datastation.common.config import init
 from datastation.common.utils import add_batch_processor_args, add_dry_run_arg
 from datastation.dataverse.dataverse_client import DataverseClient
@@ -53,7 +53,7 @@ def main():
     add_dry_run_arg(parser)
 
     args = parser.parse_args()
-    batch_processor = DatasetBatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast)
+    batch_processor = BatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast)
     pids = get_pids(args.pid_or_pids_file)
     batch_processor.process_pids(pids,
                                  callback=lambda pid: get_metadata_export(args, pid, dataverse))

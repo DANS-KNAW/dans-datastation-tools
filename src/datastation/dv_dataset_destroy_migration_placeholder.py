@@ -1,6 +1,6 @@
 import argparse
 
-from datastation.common.batch_processing import get_pids, DatasetBatchProcessorWithReport
+from datastation.common.batch_processing import get_pids, BatchProcessorWithReport
 from datastation.common.config import init
 from datastation.common.utils import add_batch_processor_args, add_dry_run_arg
 from datastation.dataverse.dataverse_client import DataverseClient
@@ -21,7 +21,7 @@ def main():
     add_dry_run_arg(parser)
     args = parser.parse_args()
 
-    batch_processor = DatasetBatchProcessorWithReport(wait=args.wait, report_file=args.report_file,
+    batch_processor = BatchProcessorWithReport(wait=args.wait, report_file=args.report_file,
                                                       headers=['PID', 'Destroyed', 'Messages'])
     pids = get_pids(args.pid_or_pids_file)
     description_text_pattern = config['migration_placeholders']['description_text_pattern']

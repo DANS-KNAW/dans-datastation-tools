@@ -1,7 +1,7 @@
 import rich
 from datetime import datetime
 
-from datastation.common.batch_processing import DataverseBatchProcessorWithReport, get_aliases
+from datastation.common.common_batch_processing import DataverseBatchProcessorWithReport, get_aliases
 from datastation.dataverse.dataverse_api import DataverseApi
 from datastation.dataverse.dataverse_client import DataverseClient
 
