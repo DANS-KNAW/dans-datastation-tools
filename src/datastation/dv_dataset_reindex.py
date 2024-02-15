@@ -13,7 +13,7 @@ from datastation.dataverse.dataverse_client import DataverseClient
 def reindex_datasets(args, dataverse_client: DataverseClient):
     pids = get_pids(args.pid_or_pid_file)
     batch_processor = BatchProcessorWithReport(wait=args.wait, fail_on_first_error=args.fail_fast,
-                                                      report_file=args.report_file, headers=["PID", "Status", "Message"])
+                                               report_file=args.report_file, headers=["PID", "Status", "Message"])
     batch_processor.process_pids(pids,
                                  lambda pid, csv_report: reindex_dataset(pid, dataverse_client, csv_report=csv_report,
                                                                          dry_run=args.dry_run))

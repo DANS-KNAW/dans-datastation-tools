@@ -22,14 +22,13 @@ def main():
     args = parser.parse_args()
 
     batch_processor = BatchProcessorWithReport(wait=args.wait, report_file=args.report_file,
-                                                      headers=['PID', 'Destroyed', 'Messages'])
+                                               headers=['PID', 'Destroyed', 'Messages'])
     pids = get_pids(args.pid_or_pids_file)
     description_text_pattern = config['migration_placeholders']['description_text_pattern']
     batch_processor.process_pids(pids,
                                  callback=lambda pid, csv_report: destroy_placeholder_dataset(dataverse.dataset(pid),
                                                                                               description_text_pattern,
-                                                                                              csv_report,
-                                                                                              dry_run=args.dry_run))
+                                                                                              csv_report))
 
 
 if __name__ == '__main__':

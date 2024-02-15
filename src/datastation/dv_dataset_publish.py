@@ -11,8 +11,8 @@ from datastation.dataverse.dataverse_client import DataverseClient
 def publish_datasets(args, dataverse_client: DataverseClient):
     pids = get_pids(args.pid_or_pid_file)
     batch_processor = BatchProcessorWithReport(report_file=args.report_file, wait=args.wait,
-                                                      fail_on_first_error=args.fail_fast,
-                                                      headers=['DOI', 'Modified', 'Change', 'Messages'])
+                                               fail_on_first_error=args.fail_fast,
+                                               headers=['DOI', 'Modified', 'Change', 'Messages'])
     batch_processor.process_pids(pids,
                                  lambda pid, csv_report: publish(pid, dataverse_client,
                                                                  update_type=args.update_type,

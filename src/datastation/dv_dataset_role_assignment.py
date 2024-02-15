@@ -13,8 +13,8 @@ from datastation.dataverse.dataverse_client import DataverseClient
 def add_role_assignments(args, dataverse_client: DataverseClient):
     pids = get_pids(args.pid_or_pid_file)
     batch_processor = BatchProcessorWithReport(wait=args.wait, fail_on_first_error=args.fail_fast,
-                                                      report_file=args.report_file,
-                                                      headers=['DOI', 'Modified', 'Assignee', 'Role', 'Change'])
+                                               report_file=args.report_file,
+                                               headers=['DOI', 'Modified', 'Assignee', 'Role', 'Change'])
     batch_processor.process_pids(pids,
                                  lambda pid, csv_report: add_role_assignment(args.role_assignment,
                                                                              dataset_api=dataverse_client.dataset(pid),
@@ -57,7 +57,7 @@ def list_role_assignments(args, dataverse_client):
 def remove_role_assignments(args, dataverse_client: DataverseClient):
     pids = get_pids(args.pid_or_pid_file)
     batch_processor = BatchProcessorWithReport(wait=args.wait, report_file=args.report_file,
-                                                      headers=['DOI', 'Modified', 'Assignee', 'Role', 'Change'])
+                                               headers=['DOI', 'Modified', 'Assignee', 'Role', 'Change'])
     batch_processor.process_pids(pids,
                                  lambda pid, csv_report: remove_role_assignment(args.role_assignment,
                                                                                 dataset_api=dataverse_client.dataset(
