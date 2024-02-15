@@ -12,24 +12,10 @@ class DataverseRole:
         self.dataverse_client = dataverse_client
         self.dry_run = dry_run
 
-    def list_role_assignments(self, args):
-        r = self.dataverse_client.dataverse(args.alias).get_role_assignments()
+    def list_role_assignments(self, alias):
+        r = self.dataverse_client.dataverse(alias).get_role_assignments()
         if r is not None:
             rich.print_json(data=r)
-
-    def add_role_assignments(self, args):
-        aliases = get_aliases(args.alias_or_alias_file)
-        batch_processor = DataverseBatchProcessorWithReport(wait=args.wait, fail_on_first_error=args.fail_fast,
-                                                            report_file=args.report_file,
-                                                            headers=['alias', 'Modified', 'Assignee', 'Role', 'Change'])
-        batch_processor.process_aliases(aliases,
-                                        lambda alias,
-                                               csv_report: self.add_role_assignment(args.role_assignment,
-                                                                                    dataverse_api=
-                                                                                    self.dataverse_client.dataverse(
-                                                                                        alias),
-                                                                                    csv_report=csv_report,
-                                                                                    dry_run=args.dry_run))
 
     def add_role_assignment(self, role_assignment, dataverse_api: DataverseApi, csv_report, dry_run: bool = False):
         assignee = role_assignment.split('=')[0]
@@ -56,18 +42,6 @@ class DataverseRole:
                 break
         return found
 
-    def remove_role_assignments(self, args):
-        aliases = get_aliases(args.alias_or_alias_file)
-        batch_processor = DataverseBatchProcessorWithReport(wait=args.wait, report_file=args.report_file,
-                                                            headers=['alias', 'Modified', 'Assignee', 'Role', 'Change'])
-        batch_processor.process_aliases(aliases,
-                                        lambda alias,
-                                               csv_report: self.remove_role_assignment(args.role_assignment,
-                                                                                       dataverse_api=
-                                                                                       self.dataverse_client.dataverse(
-                                                                                           alias),
-                                                                                       csv_report=csv_report,
-                                                                                       dry_run=args.dry_run))
 
     def remove_role_assignment(self, role_assignment, dataverse_api: DataverseApi, csv_report, dry_run: bool = False):
         assignee = role_assignment.split('=')[0]
