@@ -15,7 +15,7 @@ def get_entries(entries, search_api=None, query="*", subtree="root", object_type
 
     Args:
         entries:          A string (e.g. a PID for the default object_type 'dataset'),
-                          or a file with a list of strings or comma separated values.
+                          or a file with a list of strings or dict objects.
         search_api:       must be provided if entries is None
         query:            passed on to search_api().search
         object_type:      passed on to search_api().search
@@ -23,7 +23,7 @@ def get_entries(entries, search_api=None, query="*", subtree="root", object_type
         dry_run:          Do not perform the action, but show what would be done.
                           Only applicable if entries is None.
 
-    Returns: an iterator with strings or comma separated values.
+    Returns: an iterator with strings or dict objects.
              if entries is not provided, it searches for all objects of object_type
              and extracts their pids, fetching the result pages lazy.
     """
