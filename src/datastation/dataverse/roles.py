@@ -17,7 +17,7 @@ class DataverseRole:
         if r is not None:
             rich.print_json(data=r)
 
-    def add_role_assignment(self, role_assignment, dataverse_api: DataverseApi, csv_report, dry_run: bool = False):
+    def add_role_assignment(self, role_assignment, dataverse_api: DataverseApi, csv_report):
         assignee = role_assignment.split('=')[0]
         role = role_assignment.split('=')[1]
         action = "None"
@@ -26,7 +26,7 @@ class DataverseRole:
         else:
             print(
                 "Adding {} as {} for dataset {}".format(assignee, role, dataverse_api.get_alias()))
-            dataverse_api.add_role_assignment(assignee, role, dry_run=dry_run)
+            dataverse_api.add_role_assignment(assignee, role, dry_run=self.dry_run)
             action = "Added"
         csv_report.write(
             {'alias': dataverse_api.get_alias(), 'Modified': datetime.now(), 'Assignee': assignee, 'Role': role,
@@ -43,7 +43,7 @@ class DataverseRole:
         return found
 
 
-    def remove_role_assignment(self, role_assignment, dataverse_api: DataverseApi, csv_report, dry_run: bool = False):
+    def remove_role_assignment(self, role_assignment, dataverse_api: DataverseApi, csv_report):
         assignee = role_assignment.split('=')[0]
         role = role_assignment.split('=')[1]
         action = "None"
@@ -52,7 +52,7 @@ class DataverseRole:
             all_assignments = dataverse_api.get_role_assignments()
             for assignment in all_assignments:
                 if assignment.get('assignee') == assignee and assignment.get('_roleAlias') == role:
-                    dataverse_api.remove_role_assignment(assignment.get('id'), dry_run=dry_run)
+                    dataverse_api.remove_role_assignment(assignment.get('id'), dry_run=self.dry_run)
                     action = "Removed"
                     break
         else:

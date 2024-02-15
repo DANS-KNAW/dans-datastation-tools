@@ -23,8 +23,7 @@ def add_role_assignments(args, dataverse_client: DataverseClient):
                                                                                 dataverse_api=
                                                                                 dataverse_client.dataverse(
                                                                                     alias),
-                                                                                csv_report=csv_report,
-                                                                                dry_run=args.dry_run))
+                                                                                csv_report=csv_report))
 
 
 def remove_role_assignments(args, dataverse_client: DataverseClient):
@@ -38,8 +37,7 @@ def remove_role_assignments(args, dataverse_client: DataverseClient):
                                                                                    dataverse_api=
                                                                                    dataverse_client.dataverse(
                                                                                        alias),
-                                                                                   csv_report=csv_report,
-                                                                                   dry_run=args.dry_run))
+                                                                                   csv_report=csv_report))
 
 
 def main():
