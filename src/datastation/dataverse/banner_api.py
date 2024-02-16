@@ -2,6 +2,8 @@ import json
 
 import requests
 
+from datastation.common.utils import raise_for_status
+
 
 class BannerApi:
 

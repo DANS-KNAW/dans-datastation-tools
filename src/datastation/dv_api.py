@@ -4,6 +4,8 @@ import requests
 
 from lxml import etree
 
+from datastation.common.utils import raise_for_status
+
 
 # Thin 'client' functions for http API on the dataverse service, not using a API lib, just the requests lib
 # could be placed in a class that also keeps hold of the url and token that we initialise once!

@@ -2,7 +2,7 @@ import logging
 
 import requests
 
-from datastation.common.utils import print_dry_run_message
+from datastation.common.utils import print_dry_run_message, raise_for_status
 
 
 class SearchApi:
