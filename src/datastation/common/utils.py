@@ -20,7 +20,7 @@ def add_batch_processor_args(parser, report: bool = True):
                             dest='report_file')
 
 
-def raise_for_status(r):
+def raise_for_status_after_log(r):
     if r.status_code >= 400:
         logging.error(f"{r.status_code} {r.reason} {r.json()}")
     r.raise_for_status()
