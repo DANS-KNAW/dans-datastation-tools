@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 import argparse
-
+import requests
 
 def add_dry_run_arg(parser):
     parser.add_argument('-d', '--dry-run', action='store_true',
@@ -20,9 +20,9 @@ def add_batch_processor_args(parser, report: bool = True):
                             dest='report_file')
 
 
-def raise_for_status_after_log(r):
+def raise_for_status_after_log(r: requests.Response):
     if r.status_code >= 400:
-        logging.error(f"{r.status_code} {r.reason} {r.json()}")
+        logging.error(f"{r.status_code} {r.reason} -- {r.content}")
     r.raise_for_status()
 
 
