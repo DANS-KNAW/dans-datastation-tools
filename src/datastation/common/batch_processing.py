@@ -5,31 +5,22 @@ import time
 from datastation.common.csv import CsvReport
 
 
-def get_pids(pid_or_pids_file, search_api=None, query="*", subtree="root", object_type="dataset", dry_run=False):
+def get_pids(pid_or_pids_file):
     """ kept for backward compatibility"""
-    return get_entries(pid_or_pids_file, search_api, query, subtree, object_type, dry_run)
+    return get_entries(pid_or_pids_file)
 
 
-def get_entries(entries, search_api=None, query="*", subtree="root", object_type="dataset", dry_run=False):
+def get_entries(entries):
     """
 
     Args:
-        entries:          A string (e.g. a PID for the default object_type 'dataset'),
-                          or a file with a list of strings or dict objects.
-        search_api:       must be provided if entries is None
-        query:            passed on to search_api().search
-        object_type:      passed on to search_api().search
-        subtree (object): passed on to search_api().search
-        dry_run:          Do not perform the action, but show what would be done.
-                          Only applicable if entries is None.
+        entries: A string (e.g. a dataset PID or dataverse alias),
+                 or a plain text file with a string per line
 
-    Returns: an iterator with strings or dict objects.
-             if entries is not provided, it searches for all objects of object_type
-             and extracts their pids, fetching the result pages lazy.
+    Returns: an iterator with strings
     """
     if entries is None:
-        result = search_api.search(query=query, subtree=subtree, object_type=object_type, dry_run=dry_run)
-        return map(lambda rec: rec['global_id'], result)
+        return []
     elif os.path.isfile(os.path.expanduser(entries)):
         objects = []
         with open(os.path.expanduser(entries)) as f:
