@@ -45,7 +45,7 @@ def main():
         pids = map(lambda rec: rec['global_id'], search_result) # lazy iterator
     else:
         pids = get_entries(args.pid_or_pids_file)
-    BatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast).process_pids(
+    BatchProcessor(wait=args.wait, fail_on_first_error=args.fail_fast).process_entries(
         pids,
         lambda pid: print(json.dumps(datasets.get_dataset_attributes(pid, **attribute_options), skipkeys=True)))
 
