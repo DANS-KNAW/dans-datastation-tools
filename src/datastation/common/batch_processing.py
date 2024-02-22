@@ -17,7 +17,7 @@ def get_entries(entries):
         entries: A string (e.g. a dataset PID or dataverse alias),
                  or a plain text file with a string per line
 
-    Returns: an iterator with strings
+    Returns: a list with strings
     """
     if entries is None:
         return []
@@ -44,8 +44,8 @@ class BatchProcessor:
         """ The callback is called for each entry in entries.
 
         Args:
-            entries:  a stream of arguments for the callback
-            callback: a function that takes a single entry as argument
+            entries:  a stream of arguments for the callback.
+            callback: a function that takes a single entry as argument.
         Returns:
             None
 
@@ -66,18 +66,18 @@ class BatchProcessor:
                     logging.debug(f"Waiting {self.wait} seconds before processing next entry")
                     time.sleep(self.wait)
                 if num_entries > 1:
-                    msg = f"Processing {i} of {num_entries} entries"
+                    progress_message = f"Processing {i} of {num_entries} entries"
                 elif num_entries == -1:
-                    msg = f"Processing entry number {i}"
+                    progress_message = f"Processing entry number {i}"
                 else:
-                    msg = None
-                if msg is not None:
+                    progress_message = None
+                if progress_message is not None:
                     if type(obj) is str:
-                        logging.info(f"{msg}: {obj}")
+                        logging.info(f"{progress_message}: {obj}")
                     elif type(obj) is dict and 'PID' in obj.keys():
-                        logging.info(f"{msg}: {obj['PID']}")
+                        logging.info(f"{progress_message}: {obj['PID']}")
                     else:
-                        logging.info(msg)
+                        logging.info(progress_message)
                 callback(obj)
             except Exception as e:
                 logging.exception(f"Exception occurred on entry nr {i}", exc_info=True)
