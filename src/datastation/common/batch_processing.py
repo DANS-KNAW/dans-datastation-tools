@@ -44,7 +44,7 @@ class BatchProcessor:
         """ The callback is called for each entry in entries.
 
         Args:
-            entries:  a single string (e.g. PID) or dict, or a list of string or dicts
+            entries:  a stream of arguments for the callback
             callback: a function that takes a single entry as argument
         Returns:
             None
@@ -65,19 +65,27 @@ class BatchProcessor:
                 if self.wait > 0 and i > 1:
                     logging.debug(f"Waiting {self.wait} seconds before processing next entry")
                     time.sleep(self.wait)
-                if type(obj) is dict and 'PID' in obj.keys():
-                    logging.info(f"Processing {i} of {num_entries}: {obj['PID']}")
-                elif type(obj) is str:
-                    logging.info(f"Processing {i} of {num_entries}: {obj}")
+                if num_entries > 1:
+                    msg = f"Processing {i} of {num_entries} entries"
+                elif num_entries == -1:
+                    msg = f"Processing entry number {i}"
                 else:
-                    logging.info(f"Processing {i} of {num_entries}")
+                    msg = None
+                if msg is not None:
+                    if type(obj) is str:
+                        logging.info(f"{msg}: {obj}")
+                    elif type(obj) is dict and 'PID' in obj.keys():
+                        logging.info(f"{msg}: {obj['PID']}")
+                    else:
+                        logging.info(msg)
                 callback(obj)
             except Exception as e:
-                logging.exception("Exception occurred", exc_info=True)
+                logging.exception(f"Exception occurred on entry nr {i}", exc_info=True)
                 if self.fail_on_first_error:
                     logging.error(f"Stop processing because of an exception: {e}")
                     break
                 logging.debug("fail_on_first_error is False, continuing...")
+        logging.info(f"Batch processing ended: {i} entries processed")
 
 
 class BatchProcessorWithReport(BatchProcessor):
