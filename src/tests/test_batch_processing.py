@@ -47,14 +47,14 @@ class TestBatchProcessor:
     def test_nothing_to_process(self, capsys, caplog):
         caplog.set_level('DEBUG')
         batch_processor = BatchProcessor()
-        objects = []
+        objects = map(lambda rec: rec['global_id'], [])  # lazy empty iterator
         batch_processor.process_pids(objects, lambda obj: print(obj))
         assert capsys.readouterr().out == ""
-        assert caplog.text == ('INFO     root:batch_processing.py:57 Start batch processing on 0 entries\n'
-                               'INFO     root:batch_processing.py:88 Batch processing ended: 0 entries '
-                               'processed\n')
+        assert caplog.text == (
+            'INFO     root:batch_processing.py:59 Start batch processing on unknown number of entries\n'
+            'INFO     root:batch_processing.py:88 Batch processing ended: 0 entries processed\n')
         assert len(caplog.records) == 2
-        assert (caplog.records[0].message == 'Start batch processing on 0 entries')
+        assert (caplog.records[0].message == 'Start batch processing on unknown number of entries')
         assert (caplog.records[1].message == 'Batch processing ended: 0 entries processed')
 
     def test_process_objects_without_pids(self, capsys, caplog):
