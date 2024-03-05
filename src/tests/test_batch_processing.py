@@ -47,12 +47,12 @@ class TestBatchProcessor:
     def test_empty_stream(self, capsys, caplog):
         caplog.set_level('DEBUG')
         batch_processor = BatchProcessor()
-        objects = map(lambda rec: rec['global_id'], [])  # lazy empty iterator
+        objects = map(lambda rec: rec[''], [])  # lazy empty iterator
         batch_processor.process_pids(objects, lambda obj: print(obj))
         assert capsys.readouterr().out == ""
         assert caplog.text == (
-            'INFO     root:batch_processing.py:59 Start batch processing on unknown number of entries\n'
-            'INFO     root:batch_processing.py:88 Batch processing ended: 0 entries processed\n')
+            'INFO     root:batch_processing.py:62 Start batch processing on unknown number of entries\n'
+            'INFO     root:batch_processing.py:91 Batch processing ended: 0 entries processed\n')
         assert len(caplog.records) == 2
         assert (caplog.records[0].message == 'Start batch processing on unknown number of entries')
         assert (caplog.records[1].message == 'Batch processing ended: 0 entries processed')
@@ -60,22 +60,37 @@ class TestBatchProcessor:
     def test_single_item(self, capsys, caplog):
         caplog.set_level('DEBUG')
         batch_processor = BatchProcessor()
-        batch_processor.process_pids(['a'], lambda obj: print(obj))
+        batch_processor.process_entries(['a'], lambda obj: print(obj))
         assert capsys.readouterr().out == "a\n"
         assert caplog.text == (
-            'INFO     root:batch_processing.py:57 Start batch processing on 1 entries\n'
-            'INFO     root:batch_processing.py:88 Batch processing ended: 1 entries processed\n')
+            'INFO     root:batch_processing.py:60 Start batch processing on 1 entries\n'
+            'INFO     root:batch_processing.py:91 Batch processing ended: 1 entries processed\n')
         assert len(caplog.records) == 2
         assert (caplog.records[0].message == 'Start batch processing on 1 entries')
         assert (caplog.records[1].message == 'Batch processing ended: 1 entries processed')
+
+    def test_no_entries(self, capsys, caplog):
+        caplog.set_level('DEBUG')
+        batch_processor = BatchProcessor()
+        batch_processor.process_pids(None, lambda obj: print(obj))
+        assert capsys.readouterr().out == ""
+        assert caplog.text == 'INFO     root:batch_processing.py:56 Nothing to process\n'
+        assert len(caplog.records) == 1
+        assert (caplog.records[0].message == 'Nothing to process')
+
+    def test_no_pids(self, tmp_path):
+        assert get_pids(None) == []
+
+        open(tmp_path / "empty.txt", 'w').close()
+        assert get_pids(tmp_path / "empty.txt") == []
 
     def test_empty_list(self, capsys, caplog):
         caplog.set_level('DEBUG')
         batch_processor = BatchProcessor()
         batch_processor.process_pids([], lambda obj: print(obj))
         assert capsys.readouterr().out == ""
-        assert caplog.text == ('INFO     root:batch_processing.py:57 Start batch processing on 0 entries\n'
-                               'INFO     root:batch_processing.py:88 Batch processing ended: 0 entries '
+        assert caplog.text == ('INFO     root:batch_processing.py:60 Start batch processing on 0 entries\n'
+                               'INFO     root:batch_processing.py:91 Batch processing ended: 0 entries '
                                'processed\n')
         assert len(caplog.records) == 2
         assert (caplog.records[0].message == 'Start batch processing on 0 entries')

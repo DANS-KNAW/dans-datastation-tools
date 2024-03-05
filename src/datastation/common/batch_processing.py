@@ -52,7 +52,10 @@ class BatchProcessor:
         If an entry is a string or a dictionary with key 'PID',
         the value is used for progress logging.
         """
-        if type(entries) is list:
+        if entries is None:
+            logging.info("Nothing to process")
+            return
+        elif type(entries) is list:
             num_entries = len(entries)
             logging.info(f"Start batch processing on {num_entries} entries")
         else:
