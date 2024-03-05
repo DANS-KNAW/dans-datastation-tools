@@ -1,4 +1,3 @@
-import os
 import time
 from datetime import datetime
 
@@ -78,12 +77,6 @@ class TestBatchProcessor:
         assert len(caplog.records) == 1
         assert (caplog.records[0].message == 'Nothing to process')
 
-    def test_no_pids(self, tmp_path):
-        assert get_pids(None) == []
-
-        open(tmp_path / "empty.txt", 'w').close()
-        assert get_pids(tmp_path / "empty.txt") == []
-
     def test_empty_list(self, capsys, caplog):
         caplog.set_level('DEBUG')
         batch_processor = BatchProcessor()
@@ -146,7 +139,7 @@ class TestBatchProcessor:
             print(f"lazy-{rec}")
             return rec
         batch_processor = BatchProcessor(wait=0.1)
-        pids = [as_is(rec) for rec in  ["1", "2", "3"]]
+        pids = [as_is(rec) for rec in ["1", "2", "3"]]
         callback = lambda pid: print(pid)
         start_time = datetime.now()
         batch_processor.process_pids(pids, callback)
@@ -200,8 +193,17 @@ class TestBatchProcessor:
         assert pids == ['doi:10.5072/DAR/ATALUT']
 
     def test_get_pids_from_file(self, tmp_path):
-        with open(os.path.join(tmp_path, 'pids.txt'), 'w') as f:
+        file = tmp_path / "pids.txt"
+        with open(file, 'w') as f:
             f.write('doi:10.5072/DAR/ATALUT\ndoi:10.17026/dans-xfg-s8q3\n')
             f.close()
-            pids = get_pids(f.name)
-            assert pids == ['doi:10.5072/DAR/ATALUT','doi:10.17026/dans-xfg-s8q3']
+        pids = get_pids(file)
+        assert pids == ['doi:10.5072/DAR/ATALUT', 'doi:10.17026/dans-xfg-s8q3']
+
+    def test_get_pids_from_empty_file(self, tmp_path):
+        file = tmp_path / "empty.txt"
+        open(file, 'w').close()
+        assert get_pids(file) == []
+
+    def test_no_pids_or_file(self, tmp_path):
+        assert get_pids(None) == []
