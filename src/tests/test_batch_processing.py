@@ -179,6 +179,22 @@ class TestBatchProcessor:
         # actually the 2nd entry is not processed
         assert (caplog.records[6].message == 'Batch processing ended: 2 entries processed')
 
+    def test_continue_after_exception(self, caplog):
+        caplog.set_level('DEBUG')
+
+        def raise_second(rec):
+            if rec == "b":
+                raise Exception("b is not allowed")
+
+        batch_processor = BatchProcessor(wait=0.1, fail_on_first_error=False)
+        pids = ["a", "b", "c"]
+        callback = lambda pid: raise_second(pid)
+        batch_processor.process_pids(pids, callback)
+        assert len(caplog.records) == 9
+        assert (caplog.records[5].message == 'fail_on_first_error is False, continuing...')
+        assert (caplog.records[6].message == 'Waiting 0.1 seconds before processing next entry')
+        # see other tests for other lines
+
     def test_get_single_pid(self):
         pids = get_pids('doi:10.5072/DAR/ATALUT')
         assert pids == ['doi:10.5072/DAR/ATALUT']
