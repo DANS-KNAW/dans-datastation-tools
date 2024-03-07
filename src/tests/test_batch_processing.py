@@ -193,17 +193,17 @@ class TestBatchProcessor:
         assert pids == ['doi:10.5072/DAR/ATALUT']
 
     def test_get_pids_from_file(self, tmp_path):
-        file = tmp_path / "pids.txt"
-        with open(file, 'w') as f:
+        pids_file = tmp_path / "pids.txt"
+        with open(pids_file, 'w') as f:
             f.write('doi:10.5072/DAR/ATALUT\ndoi:10.17026/dans-xfg-s8q3\n')
             f.close()
-        pids = get_pids(file)
+        pids = get_pids(pids_file)
         assert pids == ['doi:10.5072/DAR/ATALUT', 'doi:10.17026/dans-xfg-s8q3']
 
     def test_get_pids_from_empty_file(self, tmp_path):
-        file = tmp_path / "empty.txt"
-        open(file, 'w').close()
-        assert get_pids(file) == []
+        pids_file = tmp_path / "empty.txt"
+        open(pids_file, 'w').close()
+        assert get_pids(pids_file) == []
 
-    def test_no_pids_or_file(self, tmp_path):
+    def test_no_pids_or_file(self):
         assert get_pids(None) == []
