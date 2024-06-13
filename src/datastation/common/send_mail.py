@@ -21,5 +21,4 @@ class SendMail:
         if attachment is not None:
             os.system('echo "{0}" | mail -s "{1}" -a "{2}" {3}'.format(message_body, subject, attachment, recipients))
         else:
-            # print('echo "{0}" | mail -s "{1}" {2}'.format(message_body, subject, recipients))
             os.system('echo "{0}" | mail -s "{1}" {2}'.format(message_body, subject, recipients))
