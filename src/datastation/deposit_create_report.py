@@ -31,6 +31,7 @@ class ReportHandler:
                       "Deposits report",
                       "Please, find attached the detailed report of deposits.",
                       attachment,
+                      self.__command_line_args.email_from_address,
                       self.__command_line_args.cc_email_to,
                       self.__command_line_args.bcc_email_to)
 
@@ -46,6 +47,7 @@ def main():
     parser.add_argument('-t', '--state', help='The state of the deposit')
     parser.add_argument('-u', '--user', dest='user', help='The depositor name')
     parser.add_argument('-f', '--format', dest='file_format', default='text/csv', help='Output data format')
+    parser.add_argument('r', 'from', dest='email_from_address', help='from address')
     parser.add_argument('--email-to', dest='email_to', help='when more than one recipient: comma separated emails')
     parser.add_argument('--cc-email-to', dest='cc_email_to', help='will be sent only if email-to is defined')
     parser.add_argument('--bcc-email-to', dest='bcc_email_to', help='will be sent only if email-to is defined')
