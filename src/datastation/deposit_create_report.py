@@ -17,10 +17,13 @@ class ReportHandler:
             if output_file == '-':
                 print(report)
             else:
-                self.save_report_to_file(report, output_file)
+                if len(report.split('\n')) > 1:
+                    self.save_report_to_file(report, output_file)
 
-                if self.__command_line_args.email_to is not None:
-                    self.send_report_mail(output_file)
+                    if self.__command_line_args.email_to is not None:
+                        self.send_report_mail(output_file)
+                else:
+                    print("Report is empty.")
 
     def save_report_to_file(self, report, output_file):
         with open(output_file, 'w') as output:
