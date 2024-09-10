@@ -1,4 +1,6 @@
 import argparse
+from datetime import date, timedelta
+
 from datastation.managedeposit.manage_deposit import ManageDeposit
 from datastation.common.config import init
 from datastation.common.send_mail import SendMail
@@ -46,7 +48,11 @@ def main():
     parser.add_argument('-o', '--output-file', dest='output_file', default='-',
                         help='the file to write the output and send recipient to a to or - for stdout')
     parser.add_argument('-e', '--enddate', dest='enddate', help='Filter until the record creation of this date')
-    parser.add_argument('-s', '--startdate', dest='startdate', help='Filter from the record creation of this date')
+
+    group = parser.add_mutually_exclusive_group(required=False)
+    group.add_argument('-s', '--startdate', dest='startdate', help='Filter from the record creation of this date')
+    group.add_argument('-a', '--age', dest='age', help='the number of days before today ')
+
     parser.add_argument('-t', '--state', help='The state of the deposit')
     parser.add_argument('-u', '--user', dest='user', help='The depositor name')
     parser.add_argument('-f', '--format', dest='file_format', default='text/csv', help='Output data format')
@@ -55,6 +61,9 @@ def main():
     parser.add_argument('--cc-email-to', dest='cc_email_to', help='will be sent only if email-to is defined')
     parser.add_argument('--bcc-email-to', dest='bcc_email_to', help='will be sent only if email-to is defined')
     args = parser.parse_args()
+
+    if args.age is not None and str(args.age).isnumeric(): # Note: args is a Namespace object
+        vars(args)['startdate'] = (date.today() + timedelta(days=-int(args.age))).strftime('%Y/%m/%d')
 
     server_url = config['manage_deposit']['service_baseurl'] + '/report'
 
