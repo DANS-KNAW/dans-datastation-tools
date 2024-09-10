@@ -51,7 +51,7 @@ def main():
 
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument('-s', '--startdate', dest='startdate', help='Filter from the record creation of this date')
-    group.add_argument('-a', '--age', dest='age', help='the number of days before today ')
+    group.add_argument('-a', '--age', dest='age', help='Filter from record creation not older than a number of days before today ')
 
     parser.add_argument('-t', '--state', help='The state of the deposit')
     parser.add_argument('-u', '--user', dest='user', help='The depositor name')
