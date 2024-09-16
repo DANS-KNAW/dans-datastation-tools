@@ -8,8 +8,8 @@ class ManageDeposit:
 
     def __init__(self, cmd_args):
         self.__cmd_args = cmd_args
-        self.__payload = {'user': cmd_args.user.split(',')   if cmd_args.user  is not None else cmd_args.user,
-                          'state': cmd_args.state.split(',') if cmd_args.state is not None else cmd_args.state,
+        self.__payload = {'user': cmd_args.user,
+                          'state': cmd_args.state,
                           'startdate': cmd_args.startdate,
                           'enddate': cmd_args.enddate}
         self.__headers = dict()
