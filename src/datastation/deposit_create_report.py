@@ -63,7 +63,7 @@ def main():
     args = parser.parse_args()
 
     if args.age is not None: # Note: args is a Namespace object
-        vars(args)['startdate'] = (date.today() + timedelta(days=-int(args.age))).strftime('%Y/%m/%d')
+        vars(args)['startdate'] = (date.today() + timedelta(days=-args.age)).strftime('%Y/%m/%d')
 
     server_url = config['manage_deposit']['service_baseurl'] + '/report'
 
