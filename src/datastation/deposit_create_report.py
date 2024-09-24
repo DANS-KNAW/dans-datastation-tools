@@ -51,7 +51,7 @@ def main():
 
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument('-s', '--startdate', dest='startdate', help='Filter from the record creation of this date')
-    group.add_argument('-a', '--age', dest='age', help='Filter from record creation not older than a number of days before today ')
+    group.add_argument('-a', '--age', dest='age', type=int, help='Filter from record creation not older than a number of days before today ')
 
     parser.add_argument('-t', '--state', help='The state of the deposit (repeatable)', action='append')
     parser.add_argument('-u', '--user', dest='user', help='The depositor name (repeatable)', action='append')
@@ -62,7 +62,7 @@ def main():
     parser.add_argument('--bcc-email-to', dest='bcc_email_to', help='will be sent only if email-to is defined')
     args = parser.parse_args()
 
-    if args.age is not None and str(args.age).isnumeric(): # Note: args is a Namespace object
+    if args.age is not None: # Note: args is a Namespace object
         vars(args)['startdate'] = (date.today() + timedelta(days=-int(args.age))).strftime('%Y/%m/%d')
 
     server_url = config['manage_deposit']['service_baseurl'] + '/report'
