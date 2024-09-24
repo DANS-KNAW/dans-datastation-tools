@@ -53,8 +53,8 @@ def main():
     group.add_argument('-s', '--startdate', dest='startdate', help='Filter from the record creation of this date')
     group.add_argument('-a', '--age', dest='age', help='Filter from record creation not older than a number of days before today ')
 
-    parser.add_argument('-t', '--state', help='The state of the deposit')
-    parser.add_argument('-u', '--user', dest='user', help='The depositor name')
+    parser.add_argument('-t', '--state', help='The state of the deposit (repeatable)', action='append')
+    parser.add_argument('-u', '--user', dest='user', help='The depositor name (repeatable)', action='append')
     parser.add_argument('-f', '--format', dest='file_format', default='text/csv', help='Output data format')
     parser.add_argument('-r', '--from', dest='email_from_address', help='from address')
     parser.add_argument('--email-to', dest='email_to', help='when more than one recipient: comma separated emails')
