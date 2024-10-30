@@ -43,8 +43,8 @@ manage_deposit:
 
 version_info:
   dans_rpm_module_prefix: 'dans.knaw.nl-'
-  dataverse_application_path: '/var/lib/payara5/glassfish/domains/domain1/applications/dataverse/'
-  payara_install_path: '/usr/local/payara5'
+  dataverse_application_path: '/var/lib/payara6/glassfish/domains/domain1/applications/dataverse/'
+  payara_install_path: '/usr/local/payara6'
 
 
 logging:
