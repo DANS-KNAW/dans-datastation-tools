@@ -56,7 +56,7 @@ def main():
     parser.add_argument('-t', '--state', help='The state of the deposit (repeatable)', action='append')
     parser.add_argument('-u', '--user', dest='user', help='The depositor name (repeatable)', action='append')
     parser.add_argument('-f', '--format', dest='file_format', default='text/csv', help='Output data format')
-    parser.add_argument('-v', '--server', dest='server', default='test', help='which server (prod/demo/..)')
+    parser.add_argument('-v', '--server', dest='server', default='unknown server', help='which server (prod/demo/..)')
     parser.add_argument('-r', '--from', dest='email_from_address', help='from address')
     parser.add_argument('--email-to', dest='email_to', help='when more than one recipient: comma separated emails')
     parser.add_argument('--cc-email-to', dest='cc_email_to', help='will be sent only if email-to is defined')
