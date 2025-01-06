@@ -5,6 +5,7 @@ import json
 import logging
 import re
 import os
+from quopri import quote
 
 from datastation.common.batch_processing import BatchProcessor
 from datastation.common.config import init
@@ -30,7 +31,7 @@ def open_access_archeodepot(datasets_file, licenses_file, must_be_restricted_fil
         doi_to_license_uri.items(),
         lambda doi_to_license: update_license(
             "doi:" + doi_to_license[0],
-            doi_to_license[1],
+            doi_to_license[1].strip().strip('"'),
             doi_to_keep_restricted.get(to_key(doi_to_license[0]), []),
             server_url,
             api_token,
@@ -115,6 +116,7 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         dirty = True
         if not dry_run:
             data = json.dumps({"http://schema.org/license": new_license_uri})
+            logging.debug("json {}".format(data))
             replace_dataset_metadata(server_url, api_token, doi, data)
     dirty = change_file(doi, True, change_to_restricted, server_url, api_token, datafiles_writer, dry_run) or dirty
     dirty = change_file(doi, False, change_to_accessible, server_url, api_token, datafiles_writer, dry_run) or dirty
@@ -151,6 +153,7 @@ def change_file(doi, restricted_value: bool, files, server_url, api_token, dataf
             logging.debug("updating dry_run={} {}".format(dry_run, value_))
             if not dry_run:
                 change_file_restrict(server_url, api_token, file_id, restricted_value)
+                logging.debug("file changed")
         return True
 
 
