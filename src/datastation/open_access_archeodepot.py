@@ -103,7 +103,8 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         len(must_be_restricted), len(change_to_restricted), len(change_to_accessible), must_be_restricted))
     has_change_to_restricted = len(change_to_restricted) > 0
     has_must_be_restricted = len(must_be_restricted) > 0
-    if has_change_to_restricted and not resp_data.get("termsOfAccess", None):
+    logging.debug('termsOfAccess={} fileAccessRequest={}'.format(resp_data.get("termsOfAccess"),resp_data.get("fileAccessRequest")))
+    if has_change_to_restricted and not resp_data.get("termsOfAccess"):
         logging.warning("no terms of access, can't change files to restricted of {}".format(doi))
         return
     dirty = False
