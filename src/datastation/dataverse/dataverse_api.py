@@ -63,7 +63,7 @@ class DataverseApi:
             return None
         else:
             r = requests.post(url, headers=headers, json=role_assignment)
-            raise_for_status_after_log(r.)
+            raise_for_status_after_log(r)
             return r
 
     def remove_role_assignment(self, assignment_id, dry_run=False):
