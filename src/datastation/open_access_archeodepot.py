@@ -5,7 +5,6 @@ import json
 import logging
 import re
 import os
-from quopri import quote
 
 from datastation.common.batch_processing import BatchProcessor
 from datastation.common.config import init
@@ -32,7 +31,7 @@ def open_access_archeodepot(datasets_file, licenses_file, must_be_restricted_fil
         lambda doi_to_license: update_license(
             "doi:" + doi_to_license[0],
             doi_to_license[1].strip().strip('"'),
-            doi_to_keep_restricted.get(to_key(doi_to_license[0]), []),
+            doi_to_keep_restricted.get(to_doi_key(doi_to_license[0]), []),
             server_url,
             api_token,
             dry_run,
@@ -57,7 +56,7 @@ def read_doi_to_license(datasets_file, rights_holder_to_license_uri):
         csv_reader = csv.DictReader(input_file_handler, delimiter=',', fieldnames=["DOI"], restkey="rest")
         logging.info(next(csv_reader))
         for row in csv_reader:
-            key = to_key(row["rest"][-1].strip())
+            key = to_doi_key(row["rest"][-1].strip())
             uri = rights_holder_to_license_uri.get(key, "")
             if uri:
                 doi_to_license_uri[row["DOI"]] = uri
@@ -70,10 +69,10 @@ def read_doi_to_keep_restricted(keep_restricted_files):
     doi_to_keep_restricted = {}
     with open(keep_restricted_files, "r") as input_file_handler:
         csv_reader = csv.DictReader(input_file_handler, delimiter=',',
-                                    fieldnames=["dataset_id", "DOI"], restkey="files")
+                                    fieldnames=["title", "dataset_id", "DOI"], restkey="files")
         next(csv_reader)
         for row in csv_reader:
-            doi_to_keep_restricted[to_key(row["DOI"])] = list(filter(lambda item: item != "", row["files"]))
+            doi_to_keep_restricted[to_doi_key(row["DOI"])] = list(filter(lambda item: item != "", row["files"]))
     return doi_to_keep_restricted
 
 
@@ -82,45 +81,65 @@ def read_rights_holder_to_license(licenses_file):
     with open(licenses_file, "r") as input_file_handler:
         csv_reader = csv.DictReader(input_file_handler, delimiter=',')
         for row in csv_reader:
-            rights_holder_to_license_uri[to_key(row["RIGHTS_HOLDER"])] = row["URI"]
+            rights_holder_to_license_uri[row["RIGHTS_HOLDER"]] = row["URI"]
     return rights_holder_to_license_uri
 
 
-def to_key(name):
-    return re.sub("[^a-zA-Z0-1]", "_", name)
+def to_doi_key(name):
+    return re.sub("https://doi.org/", "", re.sub("doi:", "", name))
 
 
 def update_license(doi, new_license_uri, must_be_restricted, server_url, api_token, dry_run, datasets_writer,
                    datafiles_writer):
+
+    def change_dataset_metadata(data):
+        logging.debug("json {}".format(data))
+        if not dry_run:
+            replace_dataset_metadata(server_url, api_token, doi, data)
+            logging.debug("metadata changed")
+        return True
+
+    def change_file(restricted_value: bool, files):
+        if len(files) == 0:
+            return False
+        else:
+            for file_id in list(map(lambda file: file['dataFile']['id'], files)):
+                value_ = {"DOI": doi, "FileID": file_id, "Modified": modified(),
+                          "OldRestricted": not restricted_value,
+                          "NewRestricted": restricted_value}
+                datafiles_writer.writerow(value_)
+                logging.debug("updating dry_run={} {}".format(dry_run, value_))
+                if not dry_run:
+                    change_file_restrict(server_url, api_token, file_id, restricted_value)
+                    logging.debug("file changed")
+            return True
+
     resp_data = get_dataset_metadata(server_url, api_token, doi)
     change_to_restricted = list(filter(
-        lambda file: not file['restricted'] and file_path(file) in must_be_restricted,
+        lambda file: not file.get('restricted') and file_path(file) in must_be_restricted,
         resp_data['files']))
     change_to_accessible = list(filter(
-        lambda file: file['restricted'] and file_path(file) not in must_be_restricted,
+        lambda file: file.get('restricted') and file_path(file) not in must_be_restricted,
         resp_data['files']))
-    logging.info("number of: must_be_restricted={}, change_to_restricted={}, change_to_accessible={}; {}".format(
-        len(must_be_restricted), len(change_to_restricted), len(change_to_accessible), must_be_restricted))
+    logging.info(
+        "number of: files={}, must_be_restricted={}, change_to_restricted={}, change_to_accessible={}; fileAccessRequest={} termsOfAccess={}".format(
+            len(resp_data['files']), len(must_be_restricted), len(change_to_restricted), len(change_to_accessible),
+            resp_data.get("fileAccessRequest"), resp_data.get("termsOfAccess")))
     has_change_to_restricted = len(change_to_restricted) > 0
     has_must_be_restricted = len(must_be_restricted) > 0
-    logging.debug('termsOfAccess={} fileAccessRequest={}'.format(resp_data.get("termsOfAccess"),resp_data.get("fileAccessRequest")))
-    if has_change_to_restricted and not resp_data.get("termsOfAccess"):
-        logging.warning("no terms of access, can't change files to restricted of {}".format(doi))
-        return
     dirty = False
+    if has_change_to_restricted:
+        data = access_json("termsOfAccess", "Not Available")
+        dirty = change_dataset_metadata(data)
     if bool(resp_data['fileAccessRequest']) != has_must_be_restricted:
-        dirty = True
-        if not dry_run:
-            change_access_request(server_url, api_token, doi, has_must_be_restricted)
+        data = access_json("fileRequestAccess", has_must_be_restricted)
+        dirty = change_dataset_metadata(data)
     old_license_uri = resp_data['license']['uri']
     if old_license_uri != new_license_uri:
-        dirty = True
-        if not dry_run:
-            data = json.dumps({"http://schema.org/license": new_license_uri})
-            logging.debug("json {}".format(data))
-            replace_dataset_metadata(server_url, api_token, doi, data)
-    dirty = change_file(doi, True, change_to_restricted, server_url, api_token, datafiles_writer, dry_run) or dirty
-    dirty = change_file(doi, False, change_to_accessible, server_url, api_token, datafiles_writer, dry_run) or dirty
+        data = json.dumps({"http://schema.org/license": new_license_uri})
+        dirty = change_dataset_metadata(data)
+    dirty = change_file(True, change_to_restricted) or dirty
+    dirty = change_file(False, change_to_accessible) or dirty
     logging.info('dirty = {} fileAccessRequest = {}, license = {}, rightsHolder = {}, title = {}'
                  .format(dirty,
                          resp_data['fileAccessRequest'],
@@ -138,24 +157,15 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         publish_dataset(server_url, api_token, doi, 'updatecurrent')
 
 
+def access_json(fieldName, value_):
+    return json.dumps({
+        "https://dataverse.org/schema/core#fileTermsOfAccess":
+            {("https://dataverse.org/schema/core#" + fieldName): value_}
+    })
+
+
 def file_path(file_item):
     return re.sub("^/", "", file_item.get('directoryLabel', "") + "/" + file_item['label'])
-
-
-def change_file(doi, restricted_value: bool, files, server_url, api_token, datafiles_writer, dry_run):
-    if len(files) == 0:
-        return False
-    else:
-        for file_id in list(map(lambda file: file['dataFile']['id'], files)):
-            value_ = {"DOI": doi, "FileID": file_id, "Modified": modified(),
-                      "OldRestricted": not restricted_value,
-                      "NewRestricted": restricted_value}
-            datafiles_writer.writerow(value_)
-            logging.debug("updating dry_run={} {}".format(dry_run, value_))
-            if not dry_run:
-                change_file_restrict(server_url, api_token, file_id, restricted_value)
-                logging.debug("file changed")
-        return True
 
 
 def modified():
