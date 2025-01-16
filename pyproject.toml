@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dans-datastation-tools"
-version = "0.46.0"
+version = "0.47.0"
 description = "Command line utilities for Data Station application management"
 authors = ["DANS-KNAW"]
 packages = [
@@ -29,7 +29,6 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-dans-bag-validate = "datastation.dans_bag_validate:main"
 deposit-clean-data = "datastation.deposit_clean_data:main"
 deposit-create-report = "datastation.deposit_create_report:main"
 dv-banner = "datastation.dv_banner:main"
