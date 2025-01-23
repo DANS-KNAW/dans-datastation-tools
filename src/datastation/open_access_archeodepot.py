@@ -22,7 +22,7 @@ def open_access_archeodepot(datasets_file, licenses_file, must_be_restricted_fil
     processor = BatchProcessor(wait=delay)
     dataset_writer = create_csv(
         "datasets", now,
-        ["DOI", "Modified", "OldLicense", "NewLicense", "OldRequestEnabled", "NewRequestEnabled"])
+        ["DOI", "Modified", "OldLicense", "NewLicense", "OldRequestEnabled", "NewRequestEnabled", "OldTermsOfAccess", "NewTermsOfAccess"])
     datafiles_writer = create_csv(
         "datafiles", now,
         ["DOI", "FileID", "Modified", "OldRestricted", "NewRestricted"])
@@ -103,9 +103,10 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         if len(files) == 0:
             return False
         else:
-            for file_id in list(map(lambda file: file['dataFile']['id'], files)):
+            for file in files:
+                file_id = file['dataFile']['id']
                 value_ = {"DOI": doi, "FileID": file_id, "Modified": modified(),
-                          "OldRestricted": not restricted_value,
+                          "OldRestricted": file.get('restricted'),
                           "NewRestricted": restricted_value}
                 datafiles_writer.writerow(value_)
                 logging.debug("updating dry_run={} {}".format(dry_run, value_))
@@ -126,32 +127,39 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
             len(resp_data['files']), len(must_be_restricted), len(change_to_restricted), len(change_to_accessible),
             resp_data.get("fileAccessRequest"), resp_data.get("termsOfAccess")))
     has_change_to_restricted = len(change_to_restricted) > 0
+    has_change_to_accessible = len(change_to_accessible) > 0
     has_must_be_restricted = len(must_be_restricted) > 0
     dirty = False
+
+    dirty = change_file(False, change_to_accessible) or dirty
+    new_terms_of_access = resp_data['termsOfAccess']
     if has_change_to_restricted:
-        data = access_json("termsOfAccess", "Not Available")
+        new_terms_of_access = "Not Available"
+        data = access_json("termsOfAccess", new_terms_of_access)
         dirty = change_dataset_metadata(data)
     if bool(resp_data['fileAccessRequest']) != has_must_be_restricted:
         data = access_json("fileRequestAccess", has_must_be_restricted)
         dirty = change_dataset_metadata(data)
+    dirty = change_file(True, change_to_restricted) or dirty
+    if has_change_to_accessible and not has_must_be_restricted:
+        new_terms_of_access = ""
+        data = access_json("termsOfAccess", new_terms_of_access)
+        dirty = change_dataset_metadata(data)
+
     old_license_uri = resp_data['license']['uri']
     if old_license_uri != new_license_uri:
         data = json.dumps({"http://schema.org/license": new_license_uri})
         dirty = change_dataset_metadata(data)
-    dirty = change_file(True, change_to_restricted) or dirty
-    dirty = change_file(False, change_to_accessible) or dirty
-    logging.info('dirty = {} fileAccessRequest = {}, license = {}, rightsHolder = {}, title = {}'
-                 .format(dirty,
-                         resp_data['fileAccessRequest'],
-                         resp_data['license']['name'],
-                         mdb_field_value(resp_data, 'dansRights', 'dansRightsHolder'),
-                         mdb_field_value(resp_data, 'citation', 'title')))
+    row_to_write = {"DOI": doi, "Modified": modified(),
+                    "OldLicense": old_license_uri,
+                    "NewLicense": new_license_uri,
+                    "OldRequestEnabled": resp_data['fileAccessRequest'],
+                    "NewRequestEnabled": has_must_be_restricted,
+                    "OldTermsOfAccess": resp_data['termsOfAccess'],
+                    "NewTermsOfAccess": new_terms_of_access}
+    logging.info('dirty={} {}'.format(dirty, row_to_write))
     if dirty:
-        datasets_writer.writerow({"DOI": doi, "Modified": modified(),
-                                  "OldLicense": old_license_uri,
-                                  "NewLicense": new_license_uri,
-                                  "OldRequestEnabled": resp_data['fileAccessRequest'],
-                                  "NewRequestEnabled": has_must_be_restricted})
+        datasets_writer.writerow(row_to_write)
     if dirty and not dry_run:
         logging.info(doi + ' publish_dataset')
         publish_dataset(server_url, api_token, doi, 'updatecurrent')
