@@ -123,13 +123,18 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         lambda file: file.get('restricted') and file_path(file) not in must_be_restricted,
         resp_data['files']))
     logging.info(
-        "number of: files={}, must_be_restricted={}, change_to_restricted={}, change_to_accessible={}; fileAccessRequest={} termsOfAccess={}".format(
-            len(resp_data['files']), len(must_be_restricted), len(change_to_restricted), len(change_to_accessible),
+        "{} number of: files={}, must_be_restricted={}, change_to_restricted={}, change_to_accessible={}; fileAccessRequest={} termsOfAccess={}".format(
+            doi, len(resp_data['files']), len(must_be_restricted), len(change_to_restricted), len(change_to_accessible),
             resp_data.get("fileAccessRequest"), resp_data.get("termsOfAccess")))
     has_change_to_restricted = len(change_to_restricted) > 0
     has_change_to_accessible = len(change_to_accessible) > 0
     has_must_be_restricted = len(must_be_restricted) > 0
     dirty = False
+
+    old_license_uri = resp_data['license']['uri']
+    if old_license_uri != 'https://doi.org/10.17026/fp39-0x58':
+        logging.warning(doi + ' does not have the DANS license but: ' + old_license_uri)
+        return
 
     dirty = change_file(False, change_to_accessible) or dirty
     new_terms_of_access = resp_data['termsOfAccess']
@@ -146,7 +151,6 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         data = access_json("termsOfAccess", new_terms_of_access)
         dirty = change_dataset_metadata(data)
 
-    old_license_uri = resp_data['license']['uri']
     if old_license_uri != new_license_uri:
         data = json.dumps({"http://schema.org/license": new_license_uri})
         dirty = change_dataset_metadata(data)
