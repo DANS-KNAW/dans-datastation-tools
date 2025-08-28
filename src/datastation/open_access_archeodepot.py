@@ -5,6 +5,8 @@ import json
 import logging
 import os
 import re
+import os
+
 from datastation.common.batch_processing import BatchProcessor
 from datastation.common.config import init
 from datastation.dv_api import publish_dataset, get_dataset_metadata, change_access_request, replace_dataset_metadata, \
@@ -90,6 +92,7 @@ def to_doi_key(name):
 
 def update_license(doi, new_license_uri, must_be_restricted, server_url, api_token, dry_run, datasets_writer,
                    datafiles_writer):
+
     def change_dataset_metadata(data):
         logging.debug("json {}".format(data))
         if not dry_run:
