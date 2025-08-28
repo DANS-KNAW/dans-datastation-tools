@@ -3,9 +3,8 @@ import csv
 import datetime
 import json
 import logging
-import re
 import os
-
+import re
 from datastation.common.batch_processing import BatchProcessor
 from datastation.common.config import init
 from datastation.dv_api import publish_dataset, get_dataset_metadata, change_access_request, replace_dataset_metadata, \
@@ -25,7 +24,7 @@ def open_access_archeodepot(datasets_file, licenses_file, must_be_restricted_fil
         ["DOI", "Modified", "OldLicense", "NewLicense", "OldRequestEnabled", "NewRequestEnabled", "OldTermsOfAccess", "NewTermsOfAccess"])
     datafiles_writer = create_csv(
         "datafiles", now,
-        ["DOI", "FileID", "Modified", "OldRestricted", "NewRestricted"])
+        ["DOI", "FileID", "path", "Modified", "OldRestricted", "NewRestricted"])
     processor.process_entries(
         doi_to_license_uri.items(),
         lambda doi_to_license: update_license(
@@ -91,7 +90,6 @@ def to_doi_key(name):
 
 def update_license(doi, new_license_uri, must_be_restricted, server_url, api_token, dry_run, datasets_writer,
                    datafiles_writer):
-
     def change_dataset_metadata(data):
         logging.debug("json {}".format(data))
         if not dry_run:
@@ -99,13 +97,42 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
             logging.debug("metadata changed")
         return True
 
+    def log_files_unchanged(files):
+        for file in files:
+            file_id = file['dataFile']['id']
+            value_ = {"DOI": doi,
+                      "FileID": file_id,
+                      "path": file_path(file),
+                      "Modified": '',
+                      "OldRestricted": file.get('restricted'),
+                      "NewRestricted": file.get('restricted')}
+            datafiles_writer.writerow(value_)
+            logging.debug("no change {}".format(value_))
+
+    def all_files_found_in_list(files_to_check, all_files):
+        files_not_found = []
+        for file in files_to_check:
+            if file not in all_files:
+                files_not_found.append(file)
+        if len(files_not_found) > 0:
+            logging.warning("files not found in list: {}".format(files_not_found))
+            return False
+        else:
+            return True
+
+    def get_filepaths(files):
+        return list(map(lambda file: file_path(file), files))
+
     def change_file(restricted_value: bool, files):
         if len(files) == 0:
             return False
         else:
             for file in files:
                 file_id = file['dataFile']['id']
-                value_ = {"DOI": doi, "FileID": file_id, "Modified": modified(),
+                value_ = {"DOI": doi,
+                          "FileID": file_id,
+                          "path": file_path(file),
+                          "Modified": modified(),
                           "OldRestricted": file.get('restricted'),
                           "NewRestricted": restricted_value}
                 datafiles_writer.writerow(value_)
@@ -116,12 +143,21 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
             return True
 
     resp_data = get_dataset_metadata(server_url, api_token, doi)
+
+    if not all_files_found_in_list(must_be_restricted, get_filepaths(resp_data['files'])):
+        raise Exception("not all files found in list, aborting: {}".format(doi))
+
     change_to_restricted = list(filter(
         lambda file: not file.get('restricted') and file_path(file) in must_be_restricted,
         resp_data['files']))
     change_to_accessible = list(filter(
         lambda file: file.get('restricted') and file_path(file) not in must_be_restricted,
         resp_data['files']))
+    leave_unchanged = list(filter(
+        lambda file: (file.get('restricted') and file_path(file) in must_be_restricted) or (not file.get('restricted') and file_path(file) not in must_be_restricted),
+        resp_data['files']))
+    log_files_unchanged(leave_unchanged)
+
     logging.info(
         "{} number of: files={}, must_be_restricted={}, change_to_restricted={}, change_to_accessible={}; fileAccessRequest={} termsOfAccess={}".format(
             doi, len(resp_data['files']), len(must_be_restricted), len(change_to_restricted), len(change_to_accessible),
@@ -142,8 +178,10 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         new_terms_of_access = "Not Available"
         data = access_json("termsOfAccess", new_terms_of_access)
         dirty = change_dataset_metadata(data)
-    if bool(resp_data['fileAccessRequest']) != has_must_be_restricted:
-        data = access_json("fileRequestAccess", has_must_be_restricted)
+    new_access_request = bool(resp_data['fileAccessRequest'])
+    if bool(resp_data['fileAccessRequest']) and has_must_be_restricted:
+        new_access_request = False
+        data = access_json("fileRequestAccess", new_access_request)
         dirty = change_dataset_metadata(data)
     dirty = change_file(True, change_to_restricted) or dirty
     if has_change_to_accessible and not has_must_be_restricted:
@@ -158,7 +196,7 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
                     "OldLicense": old_license_uri,
                     "NewLicense": new_license_uri,
                     "OldRequestEnabled": resp_data['fileAccessRequest'],
-                    "NewRequestEnabled": has_must_be_restricted,
+                    "NewRequestEnabled": new_access_request,
                     "OldTermsOfAccess": resp_data['termsOfAccess'],
                     "NewTermsOfAccess": new_terms_of_access}
     logging.info('dirty={} {}'.format(dirty, row_to_write))
