@@ -12,6 +12,12 @@ from datastation.common.utils import raise_for_status_after_log
 #
 # Also note that here we use the PID (persistentId) instead of the internal ID form of the requests.
 
+def is_draft_dataset(server_url, api_token, pid):
+    headers = {'X-Dataverse-key': api_token}
+    dv_resp = requests.get(server_url + '/api/datasets/:persistentId/?persistentId=' + pid,
+                       headers=headers)
+    raise_for_status_after_log(dv_resp)
+    return dv_resp.json()['data']['latestVersion']['versionState'] == 'DRAFT'
 
 def search(server_url, subtree, start=0, rows=10):
     '''

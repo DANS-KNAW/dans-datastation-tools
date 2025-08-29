@@ -8,7 +8,7 @@ import os
 
 from datastation.common.batch_processing import BatchProcessor
 from datastation.common.config import init
-from datastation.dv_api import publish_dataset, get_dataset_metadata, change_access_request, replace_dataset_metadata, \
+from datastation.dv_api import publish_dataset, get_dataset_metadata, is_draft_dataset, change_access_request, replace_dataset_metadata, \
     change_file_restrict
 
 
@@ -144,7 +144,15 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
                     logging.debug("file changed")
             return True
 
-    resp_data = get_dataset_metadata(server_url, api_token, doi)
+    try:
+        resp_data = get_dataset_metadata(server_url, api_token, doi)
+    except Exception as e:
+        logging.warning("cannot get metadata for {}, skipping: {}".format(doi, str(e)))
+        return
+
+    if is_draft_dataset(server_url, api_token, doi):
+        logging.warning("dataset is draft, skipping: {}".format(doi))
+        return
 
     if not all_files_found_in_list(must_be_restricted, get_filepaths(resp_data['files'])):
         raise Exception("not all files found in list, aborting: {}".format(doi))
@@ -175,31 +183,31 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         return
 
     dirty = change_file(False, change_to_accessible) or dirty
-    new_terms_of_access = resp_data['termsOfAccess']
+    new_terms_of_access = resp_data.get('termsOfAccess', "")
     if has_change_to_restricted:
         new_terms_of_access = "Not Available"
         data = access_json("termsOfAccess", new_terms_of_access)
-        dirty = change_dataset_metadata(data)
+        dirty = change_dataset_metadata(data) or dirty
     new_access_request = bool(resp_data['fileAccessRequest'])
     if bool(resp_data['fileAccessRequest']) and has_must_be_restricted:
         new_access_request = False
         data = access_json("fileRequestAccess", new_access_request)
-        dirty = change_dataset_metadata(data)
+        dirty = change_dataset_metadata(data) or dirty
     dirty = change_file(True, change_to_restricted) or dirty
     if has_change_to_accessible and not has_must_be_restricted:
         new_terms_of_access = ""
         data = access_json("termsOfAccess", new_terms_of_access)
-        dirty = change_dataset_metadata(data)
+        dirty = change_dataset_metadata(data) or dirty
 
     if old_license_uri != new_license_uri:
         data = json.dumps({"http://schema.org/license": new_license_uri})
-        dirty = change_dataset_metadata(data)
+        dirty = change_dataset_metadata(data) or dirty
     row_to_write = {"DOI": doi, "Modified": modified(),
                     "OldLicense": old_license_uri,
                     "NewLicense": new_license_uri,
                     "OldRequestEnabled": resp_data['fileAccessRequest'],
                     "NewRequestEnabled": new_access_request,
-                    "OldTermsOfAccess": resp_data['termsOfAccess'],
+                    "OldTermsOfAccess": resp_data.get('termsOfAccess', ""),
                     "NewTermsOfAccess": new_terms_of_access}
     logging.info('dirty={} {}'.format(dirty, row_to_write))
     if dirty:
