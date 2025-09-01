@@ -155,7 +155,8 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         return
 
     if not all_files_found_in_list(must_be_restricted, get_filepaths(resp_data['files'])):
-        raise Exception("not all files found in list, aborting: {}".format(doi))
+        logging.warning("not all files found in list, skipping: {}".format(doi))
+        return
 
     change_to_restricted = list(filter(
         lambda file: not file.get('restricted') and file_path(file) in must_be_restricted,
