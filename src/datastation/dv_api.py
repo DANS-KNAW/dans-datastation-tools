@@ -289,7 +289,8 @@ def change_file_restrict(server_url, api_token, file_id, makeRestricted):
     return resp_data
 
 def update_file_metas(server_url, api_token, pid, file_meta_updates):
-    headers = {'X-Dataverse-key': api_token}
+    headers = {'X-Dataverse-key': api_token,
+               'Content-Type': 'application/json'}
     try:
         dv_resp = requests.put(
             server_url + '/api/datasets/:persistentId/files/metadata?persistentId=' + pid,
