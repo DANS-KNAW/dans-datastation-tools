@@ -292,7 +292,7 @@ def update_file_metas(server_url, api_token, pid, file_meta_updates):
     headers = {'X-Dataverse-key': api_token}
     try:
         dv_resp = requests.put(
-            server_url + '/api/datasets/:persistentId/files/metadata?peristentId=' + pid,
+            server_url + '/api/datasets/:persistentId/files/metadata?persistentId=' + pid,
             data=json.dumps(file_meta_updates, ensure_ascii=False),
             headers=headers)
         raise_for_status_after_log(dv_resp)
