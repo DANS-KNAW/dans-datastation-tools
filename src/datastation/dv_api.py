@@ -288,6 +288,20 @@ def change_file_restrict(server_url, api_token, file_id, makeRestricted):
     resp_data = dv_resp.json()['data']
     return resp_data
 
+def update_file_metas(server_url, api_token, pid, file_meta_updates):
+    headers = {'X-Dataverse-key': api_token}
+    try:
+        dv_resp = requests.put(
+            server_url + '/api/datasets/:persistentId/files/metadata?peristentId=' + pid,
+            data=json.dumps(file_meta_updates, ensure_ascii=False),
+            headers=headers)
+        raise_for_status_after_log(dv_resp)
+    except requests.exceptions.RequestException as re:
+        print("RequestException: ", re)
+        raise
+    resp_data = dv_resp.json()['data']
+    return resp_data
+
 
 def replace_dataset_metadata(server_url, api_token, pid, json_data):
     headers = {'X-Dataverse-key': api_token}

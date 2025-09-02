@@ -3,13 +3,12 @@ import csv
 import datetime
 import json
 import logging
-import re
 import os
-
+import re
 from datastation.common.batch_processing import BatchProcessor
 from datastation.common.config import init
 from datastation.dv_api import publish_dataset, get_dataset_metadata, is_draft_dataset, change_access_request, replace_dataset_metadata, \
-    change_file_restrict
+    change_file_restrict, update_file_metas
 
 
 def open_access_archeodepot(datasets_file, licenses_file, must_be_restricted_files, dataverse_config, dry_run, delay):
@@ -91,7 +90,6 @@ def to_doi_key(name):
 
 def update_license(doi, new_license_uri, must_be_restricted, server_url, api_token, dry_run, datasets_writer,
                    datafiles_writer):
-
     def change_dataset_metadata(data):
         logging.debug("json {}".format(data))
         if not dry_run:
@@ -125,10 +123,28 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
     def get_filepaths(files):
         return list(map(lambda file: file_path(file), files))
 
-    def change_file(restricted_value: bool, files):
+    def file_to_file_meta_update(file, restricted_value):
+        update = {
+            "id": file['dataFile']['id'],
+            "label": file['label'],
+            "directoryLabel": file.get('directoryLabel', ""),
+            "description": file.get('description', ""),
+            "categories": file.get('categories', []),
+            "provFreeForm": ""
+        }
+        # Setting restrict to the same value causes an error in the API
+        if file.get('restricted') != restricted_value:
+            update["restrict"] = restricted_value
+        return update
+
+    def change_files(restricted_value: bool, pid, files):
         if len(files) == 0:
             return False
         else:
+            file_meta_updates = list(map(lambda file: file_to_file_meta_update(file, restricted_value), files))
+            logging.info("changing {} files to restricted={}".format(len(files), restricted_value))
+            if not dry_run:
+                update_file_metas(server_url, api_token, pid, file_meta_updates)
             for file in files:
                 file_id = file['dataFile']['id']
                 value_ = {"DOI": doi,
@@ -137,11 +153,8 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
                           "Modified": modified(),
                           "OldRestricted": file.get('restricted'),
                           "NewRestricted": restricted_value}
-                datafiles_writer.writerow(value_)
                 logging.debug("updating dry_run={} {}".format(dry_run, value_))
-                if not dry_run:
-                    change_file_restrict(server_url, api_token, file_id, restricted_value)
-                    logging.debug("file changed")
+                datafiles_writer.writerow(value_)
             return True
 
     try:
@@ -183,7 +196,7 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         logging.warning(doi + ' does not have the DANS license but: ' + old_license_uri)
         return
 
-    dirty = change_file(False, change_to_accessible) or dirty
+    dirty = change_files(False, doi, change_to_accessible) or dirty
     new_terms_of_access = resp_data.get('termsOfAccess', "")
     if has_change_to_restricted:
         new_terms_of_access = "Not Available"
@@ -194,7 +207,7 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         new_access_request = False
         data = access_json("fileRequestAccess", new_access_request)
         dirty = change_dataset_metadata(data) or dirty
-    dirty = change_file(True, change_to_restricted) or dirty
+    dirty = change_files(True, doi, change_to_restricted) or dirty
     if has_change_to_accessible and not has_must_be_restricted:
         new_terms_of_access = ""
         data = access_json("termsOfAccess", new_terms_of_access)
