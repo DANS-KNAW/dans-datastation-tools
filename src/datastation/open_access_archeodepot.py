@@ -125,7 +125,7 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
 
     def file_to_file_meta_update(file, restricted_value):
         update = {
-            "id": file['dataFile']['id'],
+            "dataFileId": file['dataFile']['id'],
             "label": file['label'],
             "directoryLabel": file.get('directoryLabel', ""),
             "description": file.get('description', ""),
@@ -186,7 +186,7 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
         "{} number of: files={}, must_be_restricted={}, change_to_restricted={}, change_to_accessible={}; fileAccessRequest={} termsOfAccess={}".format(
             doi, len(resp_data['files']), len(must_be_restricted), len(change_to_restricted), len(change_to_accessible),
             resp_data.get("fileAccessRequest"), resp_data.get("termsOfAccess")))
-    has_change_to_restricted = len(change_to_restricted) > 0
+    #has_change_to_restricted = len(change_to_restricted) > 0
     has_change_to_accessible = len(change_to_accessible) > 0
     has_must_be_restricted = len(must_be_restricted) > 0
     dirty = False
@@ -198,7 +198,7 @@ def update_license(doi, new_license_uri, must_be_restricted, server_url, api_tok
 
     dirty = change_files(False, doi, change_to_accessible) or dirty
     new_terms_of_access = resp_data.get('termsOfAccess', "")
-    if has_change_to_restricted:
+    if has_must_be_restricted:
         new_terms_of_access = "Not Available"
         data = access_json("termsOfAccess", new_terms_of_access)
         dirty = change_dataset_metadata(data) or dirty
